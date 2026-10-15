@@ -19,6 +19,7 @@
 | --- | --- |
 | [`releases/小米15充电加速_v8.4.8.zip`](releases/小米15充电加速_v8.4.8.zip) | 刷入包，在 KernelSU / Magisk 中安装 |
 | [`module/`](module/) | 模块完整源码 |
+| [`CHANGELOG.md`](CHANGELOG.md) | 全部版本更新日志（v8.0.7 起，历史刷入包在 `releases/`） |
 
 md5：`ab18b672a700f844941160e2a697ad69`
 
