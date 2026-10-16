@@ -9,7 +9,7 @@ nohup sh $MODDIR/lowbat.sh >/dev/null 2>&1 &
 # dtbo 被系统更新或手动刷回时提醒
 (sleep 20; sh $MODDIR/dtbo/apply.sh desc >/dev/null 2>&1; st=$(sh $MODDIR/dtbo/apply.sh status 2>/dev/null)
 case "$st" in changed*)
-  cmd notification post -S bigtext -t "小米15充电加速" dtbo_charge "检测到 dtbo 已还原（系统更新或手动刷回），之前的充电电流/关机电压设置已失效。请打开充电监控 WebUI 重新应用。" >/dev/null 2>&1;;
+  cmd notification post -S bigtext -t "$(sed -n 's/^name=//p' $MODDIR/module.prop)" dtbo_charge "检测到 dtbo 已还原（系统更新或手动刷回），之前的充电电流/关机电压设置已失效。请打开充电监控 WebUI 重新应用。" >/dev/null 2>&1;;
 esac) &
 # 高刷切换守护
 nohup sh $MODDIR/hz/daemon.sh >/dev/null 2>&1 &
