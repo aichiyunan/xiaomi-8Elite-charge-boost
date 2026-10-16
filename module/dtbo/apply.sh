@@ -1,9 +1,11 @@
 #!/system/bin/sh
 # 用法: apply.sh <电流mA> <关机电压mV> <断充温度°C> [165|-] | restore | status
-# 第 4 项 165 = 屏幕超频 165Hz（华星 o3_42 屏添加 132/144/155/165Hz timing）
-# 小米私有协议功率：不走参数，读 /data/adb/mi_charge_boost/proto（100|120，其它=原厂 90W），由 WebUI 开关写入
+# 第 4 项 165 = 屏幕超频 165Hz（华星 o3_42 屏添加 132/144/155/165Hz timing，仅小米15 dada）
+# 小米私有协议功率：不走参数，读 /data/adb/mi_charge_boost/proto（机型可选档位见 models.sh PWO，其它=原厂），由 WebUI 开关写入
+# v8.4.9 起多机型：机型参数见 ../models.sh；模板按原厂镜像头部哈希从 stock.list 选（<代号>_<布局>.tpl，dada 仍用 dada.tpl）
 PF=${PROTO_F:-/data/adb/mi_charge_boost/proto}; PW=$(cat $PF 2>/dev/null); case "$PW" in 100|120) ;; *) PW=-;; esac
 H=${0%/*}; D=${DTBO_D:-/data/adb/mi_charge_boost/dtbo}
+MCB_ROOT=${H%/*}; . $MCB_ROOT/models.sh
 # 数据目录必须可写：移植系统上可能出现属主/SELinux 标签不对导致 Permission denied，先修复，修不好换备用目录
 okw(){ mkdir -p "$1" 2>/dev/null && touch "$1/.w" 2>/dev/null && rm -f "$1/.w"; }
 F=/data/adb/.mcb_dtbo
@@ -21,12 +23,13 @@ BLK=/dev/block/by-name/dtbo$S; [ -e $BLK ] || BLK=/dev/block/bootdevice/by-name/
 [ -n "$DTBO_BLK" ] && BLK=$DTBO_BLK
 [ -e $BLK ] || { echo "! 找不到 dtbo 分区"; exit 1; }
 chmod 755 $H/dtbopatch
-prep(){ # $1=I $2=T：Q: 行（按 OS3 重构的快充表）只在改了电流或温度时写入；{IQ}/{TQ} 未设定时用原厂上限 15500/48
-  iq=$1; [ "$iq" = - ] && iq=15500; tq=$2; [ "$tq" = - ] && tq=48
-  # 改了电流：全程按所选电流满速撑到 4580mV（与 303 加速版一致）；没改电流：高压段保持原厂 16500/3780/4510
-  if [ "$1" = - ]; then mq=$iq; [ $mq -gt 16500 ] && mq=16500; lq=3780; vq=4510; mv='{I}'; else mq=$1; lq=$1; vq=4580; mv=$1; fi
-  sv='{I}'; [ "$1" = - ] || { sv=$1; [ $1 -ge 20000 ] && sv=20000; }
-  if [ "$1$2" = "--" ]; then grep -v '^Q:' $H/dada.tpl; else sed 's/^Q://' $H/dada.tpl; fi | sed "s/{IQ}/$iq/g; s/{TQ}/$tq/g; s/{S}/$sv/g; s/{MQ}/$mq/g; s/{LQ}/$lq/g; s/{VQ}/$vq/g; s/{M}/$mv/g"
+prep(){ # $1=I $2=T [$3=模板名]：Q: 行（按 OS3 重构的快充表，仅 dada.tpl 有）只在改了电流或温度时写入；{IQ}/{TQ} 未设定时用本机原厂上限 $MI/48
+  iq=$1; [ "$iq" = - ] && iq=$MI; tq=$2; [ "$tq" = - ] && tq=48; tf=$H/${3:-$TPL}.tpl
+  # 改了电流：全程按所选电流满速撑到本机 FFC 截止电压 $VQ（dada 4580，与 303 加速版一致）；没改电流：高压段保持原厂 16500/3780/4510
+  if [ "$1" = - ]; then mq=$iq; [ $mq -gt 16500 ] && mq=16500; lq=3780; vq=4510; mv='{I}'; else mq=$1; lq=$1; vq=$VQ; mv=$1; fi
+  # {S} 单电荷泵分支上限：所选电流封顶 $SC（dada 20000）；{IW} 降速温区改满速时用的电流：所选电流或本机原厂值
+  sv='{I}'; [ "$1" = - ] || { sv=$1; [ $1 -ge $SC ] && sv=$SC; }; iw=$iq
+  if [ "$1$2" = "--" ]; then grep -v '^Q:' $tf; else sed 's/^Q://' $tf; fi | sed "s/{IQ}/$iq/g; s/{TQ}/$tq/g; s/{S}/$sv/g; s/{MQ}/$mq/g; s/{LQ}/$lq/g; s/{VQ}/$vq/g; s/{M}/$mv/g; s/{IW}/$iw/g"
 }
 sha(){ dd if="$1" bs=4096 count=$2 2>/dev/null | sha256sum | cut -d' ' -f1; }
 hsha(){ # 只算 DT table 头部 total_size 长度的 sha256，与分区大小、尾部填充、AVB 尾部无关
@@ -39,11 +42,19 @@ ALLOW='^mismatch +(mca_strategy_quick_charge/(temp_para[12]|(normal|ffc)_volt_pa
 oldtpl(){ grep -vE '^(Q:)?mca_strategy_quick_charge	(vstep_para|(normal|ffc)_volt_para[12]_[45])	'; }
 dropallow(){ # 没改电流/温度时旧布局的快充分段全部保持原厂
   grep -vE '^(Q:)?(mca_strategy_quick_charge	(temp_para[12]|(normal|ffc)_volt_para[12]_[23]|ffc_stage_para2_3|div_max_curr|div_single_curr)|mca_quick_charge_batt_para_gbl	[^	]+)	'; }
-isold(){ # $1=镜像：用完整模板试跑，快充表 _4 缺失即为旧布局
+isold(){ # $1=镜像：用完整模板试跑，快充表 _4 缺失即为旧布局（只有小米15 dada.tpl 有新旧两种布局）
+  [ "$TPL" = dada ] || return 1
   prep 15500 58 > $TMP/lay.tpl; DTBO_SET=I=15500,V=2700,T=58,L=48 $H/dtbopatch "$1" $TMP/lay.tpl - 2>&1 | grep -qE '^missing +mca_strategy_quick_charge/normal_volt_para1_4$'; }
 oldok(){ # $1=日志：旧布局下只有允许的属性不一致、没有缺失
   grep -qE "missing=0 " "$1" || return 1
   ! grep -E '^mismatch ' "$1" | grep -vqE "$ALLOW"; }
+bestt(){ # 非原厂底包：在本机型各布局模板里试跑，选没有缺失、不一致最少的（dada 固定 dada.tpl）
+  [ "$CODE" = dada ] && { echo dada; return; }
+  bt=$DEFT; bm=99999
+  for f in $(ls -r $H/${CODE}_*.tpl); do t=${f##*/}; t=${t%.tpl}; prep $I $T $t > $TMP/bt.tpl; cp $AVB $TMP/bt.avb
+    r=$(DTBO_SET=I=$I,V=$V,T=$T,L=$L $H/dtbopatch "$1" $TMP/bt.tpl - 2>&1 | grep '^SUMMARY')
+    case "$r" in *" missing=0 "*) m=${r#*mismatch=}; m=${m%% *}; [ "$m" -lt "$bm" ] && { bm=$m; bt=$t; };; esac
+  done; echo $bt; }
 nb(){ echo $(( $(stat -c %s "$1") / 4096 )); }
 write(){ # 文件 -> 分区并校验
   n=$(nb "$1"); [ "$n" -gt 0 ] || { echo "! 文件为空"; return 1; }; want=$(sha "$1" $n)
@@ -89,13 +100,17 @@ esac
 { read -r SI_N; read -r SI_D; read -r SI_O; read -r SI_B; } <<EOF
 $(sh $H/../sysinfo.sh)
 EOF
-[ "$SI_D" = dada ] || { echo "! 仅支持小米15 (dada)"; exit 1; }
+CODE=$SI_D
+model_info "$CODE" || { echo "! 不支持的机型 $SI_N ($SI_D)，已适配：$(model_names)"; exit 1; }
 I=${1:--}; V=${2:--}; T=${3:--}; Z=${4:--}
 case "$Z" in 165|-) ;; *) echo "! 屏幕超频参数只能是 165 或 -"; exit 1;; esac
+[ "$Z" = 165 ] && [ "$HZ" != 1 ] && { echo "! 屏幕超频 165Hz 只支持小米15（华星 o3_42 屏），$MN 不支持"; exit 1; }
+# 私有协议档位只接受本机可选值（原厂已是 120W 的 K80 Pro 没有可选档）
+[ "$PW" != - ] && case " $PWO " in *" $PW "*) ;; *) echo "- 私有协议 ${PW}W 不适用于 $MN（原厂 ${PW0}W），忽略"; PW=-; rm -f $PF;; esac
 for x in "$I" "$V" "$T"; do case "$x" in -) ;; *[!0-9]*|"") echo "! 参数错误"; exit 1;; esac; done
 [ "$I$V$T$Z$PW" = "-----" ] && { echo "- 都不修改，跳过写入"; exit 0; }
-echo "- 机型: $SI_N (dada)　系统: $SI_O${SI_B:+（底包 $SI_B）}"
-[ "$I" = - ] || { [ $I -ge 9000 ] && [ $I -le 20500 ] || { echo "! 电流范围 9000-20500 mA"; exit 1; }; }
+echo "- 机型: $SI_N ($SI_D)　系统: $SI_O${SI_B:+（底包 $SI_B）}"
+[ "$I" = - ] || { [ $I -ge 9000 ] && [ $I -le $MX ] || { echo "! 电流范围 9000-$MX mA"; exit 1; }; }
 [ "$V" = - ] || { [ $V -ge 2400 ] && [ $V -le 3400 ] || { echo "! 关机电压范围 2400-3400 mV"; exit 1; }; }
 L=-
 [ "$T" = - ] || { [ $T -ge 45 ] && [ $T -le 58 ] || { echo "! 温度范围 45-58°C"; exit 1; }; L=48; [ $((T-3)) -lt 48 ] && L=$((T-3)); }
@@ -104,28 +119,36 @@ TMP=; for b in /dev /data/local/tmp $D; do t=$b/mcb_dtbo.$$; rm -rf $t; mkdir -p
 [ -n "$TMP" ] || { echo "! 无法创建临时目录（/dev、/data/local/tmp、$D 都不可写）"; exit 1; }
 trap 'cd /; rm -rf $TMP' EXIT; cd /
 # 移植系统的 dtbo 可能没有 AVB 尾部：给每个模板配上原厂 AVB 模板（算法 NONE，只更新哈希）
-for n in r chk lay; do cp $H/dada.avb $TMP/$n.avb; done
+AVB=$H/$CODE.avb; [ -f $AVB ] || AVB=$H/dada.avb
+for n in r chk lay; do cp $AVB $TMP/$n.avb; done
 if [ ! -f $D/stock.img ]; then
   dd if=$BLK of=$TMP/cur.img bs=1048576 2>/dev/null
-  HS=$(hsha $TMP/cur.img); KV=; [ -n "$HS" ] && KV=$(grep "^$HS " $H/stock.list 2>/dev/null | cut -d' ' -f2)
+  HS=$(hsha $TMP/cur.img); KV=; TP=; [ -n "$HS" ] && { set -- $(grep "^$HS " $H/stock.list 2>/dev/null | head -1); }
+  if [ -n "$HS" ] && [ -n "$2" ]; then
+    # stock.list：哈希 代号 模板 版本；只接受本机型自己的原厂镜像
+    if [ "$2" != "$CODE" ]; then model_info "$2" >/dev/null && o=$MN || o=$2; model_info "$CODE"
+      echo "! 当前 dtbo 是 $o 的原厂镜像（$4），与本机 $MN 不符，拒绝写入"; rm -rf $TMP; exit 1; fi
+    TP=$3; KV=$4
+  fi
   U=$H/unmod_$(echo "$HS" | cut -c1-8).rules
+  [ "$CODE" = dada ] || U=/nonexistent
   if [ -z "$KV" ] && [ -n "$HS" ] && [ -f "$U" ]; then
     # 已收录的“预改”dtbo（移植包自带改过的充电参数）：先还原成对应原厂值，比对通过才当作原厂备份
     cp $TMP/cur.img $D/orig_port.img 2>/dev/null
-    cp $H/dada.avb $TMP/u.avb; cp "$U" $TMP/u.rules
-    if $H/dtbopatch $TMP/cur.img $TMP/u.rules $TMP/un.img > $TMP/un.log 2>&1 && prep 15500 58 > $TMP/chk.tpl && DTBO_SET=I=15500,V=2700,T=58,L=48 $H/dtbopatch $TMP/un.img $TMP/chk.tpl - > $TMP/chk.log 2>&1 && grep -q "done=0 mismatch=0 missing=0" $TMP/chk.log; then
+    cp $H/dada.avb $TMP/u.avb; cp "$U" $TMP/u.rules; TP=dada
+    if $H/dtbopatch $TMP/cur.img $TMP/u.rules $TMP/un.img > $TMP/un.log 2>&1 && prep 15500 58 dada > $TMP/chk.tpl && DTBO_SET=I=15500,V=2700,T=58,L=48 $H/dtbopatch $TMP/un.img $TMP/chk.tpl - > $TMP/chk.log 2>&1 && grep -q "done=0 mismatch=0 missing=0" $TMP/chk.log; then
       l=$(sed -n '1s/^# *//p' "$U"); KV="${l%%：*}（预改参数已还原为 OS4.0.0.19 原厂值）"; mv $TMP/un.img $TMP/cur.img
     else echo "! 预改 dtbo 还原失败：$(grep -E 'ERROR|SUMMARY' $TMP/un.log $TMP/chk.log 2>/dev/null | tail -1)"; exit 1; fi
   fi
   if [ -n "$KV" ]; then
     cp $TMP/cur.img $D/stock.img && [ "$(sha $D/stock.img 1)" = "$(sha $TMP/cur.img 1)" ] || { echo "! 原版备份写入 $D 失败"; exit 1; }
-    rm -f $D/stock_src
+    rm -f $D/stock_src; echo "$CODE $TP" > $D/tpl
     echo "- 哈希匹配原厂 $KV dtbo，已备份 → $D/stock.img"
   elif [ "$DTBO_CUR" = 1 ]; then
     # 原厂校验未通过（官改包等），用户选择以当前 dtbo 为底：备份当前分区，直接覆盖写入，不逐项比对原厂值
     [ "$(head -c 4 $TMP/cur.img | od -An -tx1 | tr -d ' \n')" = d7b7ab1e ] || { echo "! 当前 dtbo 分区不是 DT table 格式"; exit 1; }
     cp $TMP/cur.img $D/stock.img && [ "$(sha $D/stock.img 1)" = "$(sha $TMP/cur.img 1)" ] || { echo "! 当前 dtbo 备份写入 $D 失败"; exit 1; }
-    echo cur > $D/stock_src
+    echo cur > $D/stock_src; echo "$CODE $(bestt $TMP/cur.img)" > $D/tpl
     echo "- 原厂校验未通过，按选择以当前 dtbo 为底修改（头部哈希 ${HS:-无法读取}），已备份 → $D/stock.img"
   else
     mkdir -p /sdcard/Download 2>/dev/null; cp $TMP/cur.img /sdcard/Download/dtbo_当前分区.img 2>/dev/null && echo "  已导出当前分区 → /sdcard/Download/dtbo_当前分区.img，可发给作者收录"
@@ -136,6 +159,17 @@ if [ ! -f $D/stock.img ]; then
 else
   [ "$(cat $D/stock_src 2>/dev/null)" = cur ] && echo "- 已有当前 dtbo 备份（非原厂，以当前镜像为底），沿用 $D/stock.img" || echo "- 已有原厂备份，沿用 $D/stock.img"
 fi
+# 备份对应的模板：v8.4.9 起备份时记在 $D/tpl（"代号 模板"）；旧版本的备份只可能来自小米15 → dada.tpl
+TPL=; if [ -f $D/tpl ]; then read c t < $D/tpl
+  [ "$c" = "$CODE" ] || { echo "! 已有的 dtbo 备份属于 $c，与本机 $CODE 不符，请先删除 $D 后重试"; rm -rf $TMP; exit 1; }; TPL=$t
+else
+  set -- $(grep "^$(hsha $D/stock.img) " $H/stock.list 2>/dev/null | head -1)
+  if [ -n "$2" ]; then [ "$2" = "$CODE" ] || { echo "! 已有的 dtbo 备份是 $2 的原厂镜像，与本机 $CODE 不符"; rm -rf $TMP; exit 1; }; TPL=$3
+  elif [ "$CODE" = dada ]; then TPL=dada; else TPL=$DEFT; fi
+  echo "$CODE $TPL" > $D/tpl
+fi
+[ -f $H/$TPL.tpl ] || { echo "! 缺少模板 $TPL.tpl"; rm -rf $TMP; exit 1; }
+[ "$TPL" = dada ] || echo "- 机型模板: $TPL（快充/温控表按本机原厂值，FFC 截止电压 ${VQ}mV 不改）"
 : > $TMP/r.tpl
 [ "$I$V$T" = "---" ] || prep $I $T >> $TMP/r.tpl
 [ "$Z" = 165 ] && { cat $H/hz165.tpl >> $TMP/r.tpl; echo "- 屏幕超频：添加 132/144/155/165Hz timing"; }
@@ -152,7 +186,7 @@ fi
 if [ -s $TMP/r.tpl ]; then
   DTBO_SET=I=$I,V=$V,T=$T,L=$L $H/dtbopatch $D/stock.img $TMP/r.tpl $TMP/new.img $FORCE > $TMP/log 2>&1
   rc=$?; grep -E "SUMMARY|ERROR|missing " $TMP/log
-  [ $rc = 4 ] && grep -q "missing  *+" $TMP/log && echo "! 没找到华星 o3_42 屏幕节点，此机型/屏幕不支持超频"
+  [ $rc = 4 ] && [ "$Z" = 165 ] && grep -q "missing  *+" $TMP/log && echo "! 没找到华星 o3_42 屏幕节点，此机型/屏幕不支持超频"
 else
   cp $D/stock.img $TMP/new.img; rc=0
 fi
@@ -160,7 +194,9 @@ fi
 if [ "$PW" != - ]; then
   # 小米私有协议功率：单独一遍，属性存在即覆盖（参考 K80 Pro：PD 协议 max_power 120W、快充 max_power 120000）
   printf 'mca_protocol_pd_class\tmax_power\t0000005a\tw\t%s\nmca_strategy_quick_charge\tmax_power\t00015f90\tw\t%s\n' $PW ${PW}000 > $TMP/p.tpl
-  cp $H/dada.avb $TMP/p.avb
+  # K90 至尊版另有 strategy_quick_charge_override（含 max_power），存在就一起改
+  [ "$CODE" = warsaw ] && printf '?strategy_quick_charge_override\tmax_power\t000186a0\tw\t%s\n' ${PW}000 >> $TMP/p.tpl
+  cp $AVB $TMP/p.avb
   DTBO_SET=I=$I,V=$V,T=$T,L=$L $H/dtbopatch $TMP/new.img $TMP/p.tpl $TMP/new2.img -force > $TMP/plog 2>&1; prc=$?
   grep -E "SUMMARY|ERROR|missing " $TMP/plog
   if [ $prc = 0 ] && ! grep -q "^missing " $TMP/plog; then mv $TMP/new2.img $TMP/new.img; echo "- 小米私有协议：${PW}W"
@@ -172,5 +208,5 @@ rm -rf $TMP
 f(){ [ "$1" = - ] && echo 不修改 || echo "$1$2"; }
 desc
 zz=不超频; [ "$Z" = 165 ] && zz=165Hz
-pp=原厂90W; [ "$PW" = - ] || pp=${PW}W
+pp=原厂${PW0}W; [ "$PW" = - ] || pp=${PW}W
 echo "- 已写入：充电电流 $(f $I mA)，关机电压 $(f $V mV)，断充温度 $(f $T °C)，屏幕 $zz，私有协议 $pp，重启生效"
