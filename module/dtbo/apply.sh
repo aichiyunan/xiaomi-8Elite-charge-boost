@@ -79,9 +79,9 @@ desc(){ # 把 dtbo 状态写进模块描述，模块列表里直接可见
   [ -n "$m" ] && [ "$m" != 0 ] && t="$t ｜ 低电量延迟关机 ${m}mV" || t="$t ｜ 低电量延迟关机 关"
   if [ "$(cat /data/adb/mi_charge_boost/pps 2>/dev/null)" = 1 ]; then
     if [ -d /data/adb/modules/FreePPS ] && [ ! -f /data/adb/modules/FreePPS/disable ]; then t="$t ｜ ⚡ 公版PPS 让给 FreePPS"
-    else l=$(cat /data/adb/mi_charge_boost/pps_last 2>/dev/null); t="$t ｜ ⚡ 公版PPS 开${l:+（上次 ${l}W 头已放行）}"; fi
+    else l=$(cat /data/adb/mi_charge_boost/pps_last 2>/dev/null); t="$t ｜ ⚡ 公版PPS 开（内置 FreePPS）${l:+（上次 ${l}W 头）}"; fi
   else t="$t ｜ 公版PPS 关"; fi
-  sed -i "s|^description=.*|description=$t ｜ 致谢：酷安@低线阻狂魔、酷安@花橋桥（PPS 节点）、酷安@瓦力喀 / FreePPS（思路参考）|" "$P"
+  sed -i "s|^description=.*|description=$t ｜ 致谢：酷安@低线阻狂魔、酷安@花橋桥（PPS 节点）、内置 FreePPS（Seyud / 酷安@瓦力喀，GPL-3.0）|" "$P"
 }
 case "$1" in
 desc) desc; exit 0;;
