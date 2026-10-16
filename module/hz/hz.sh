@@ -15,7 +15,8 @@ case "$1" in
     O=1; [ -f $OFFF ] && O=0
     echo "{\"on\":$O,\"target\":$T,\"cur\":$C,\"raw\":$W,\"idle\":$I,\"busy\":$B,\"fail\":$F,\"avail\":$A}"
     ;;
-  avail)  # 有 165Hz 模式才显示 WebUI 的高刷切换入口
+  avail)  # 有 165Hz 模式才显示 WebUI 的高刷切换入口（只有小米15；K90至尊版原生 165Hz 不走这里）
+    [ "$(cat $MODDIR/model 2>/dev/null || echo dada)" = dada ] || { echo 0; exit 0; }
     A=$(cat $AVAILF 2>/dev/null)
     if [ -z "$A" ]; then [ -n "$(get_id 165)" ] && A=1 || A=0; echo $A > $AVAILF; fi
     echo $A ;;
