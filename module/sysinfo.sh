@@ -4,7 +4,9 @@
 g(){ for p; do v=$(getprop $p); [ -n "$v" ] && { echo "$v"; return; }; done; }
 NAME=$(g ro.product.marketname ro.product.vendor.marketname ro.product.odm.marketname ro.vendor.oplus.market.name ro.product.vendor.model ro.product.model)
 DEV=$(g ro.product.vendor.device ro.product.odm.device ro.product.device)
-for p in ro.product.device ro.product.vendor.device ro.product.odm.device ro.product.system.device; do [ "$(getprop $p)" = dada ] && DEV=dada; done
+# 已适配机型（dada / haotian / miro / annibale / warsaw）：任一 device 属性是已适配代号就以它为准，vendor/odm 优先（dtbo 跟底包走）
+SUP=" dada haotian miro annibale warsaw "
+case "$SUP" in *" $DEV "*) ;; *) for p in ro.product.vendor.device ro.product.odm.device ro.product.device ro.product.system.device; do v=$(getprop $p); case "$SUP" in *" $v "*) DEV=$v; break;; esac; done;; esac
 OPL=$(getprop ro.build.version.oplusrom.display); [ -n "$OPL" ] || OPL=$(getprop ro.build.version.oplusrom)
 MI=$(g ro.mi.os.version.incremental)
 INC=$(getprop ro.build.version.incremental)
