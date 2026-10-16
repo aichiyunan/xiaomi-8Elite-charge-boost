@@ -6,6 +6,8 @@ until [ "$(getprop sys.boot_completed)" = "1" ]; do sleep 3; done
 log(){ echo "$(date '+%m-%d %H:%M:%S') $*" >> $LOG; [ $(wc -l < $LOG) -gt 200 ] && sed -i '1,100d' $LOG; }
 N=/sys/class/xm_power/charger/charger_thermal/wired_chg_curr
 [ -f $N ] || N=$(find -L /sys/class/xm_power -maxdepth 4 -name wired_chg_curr -type f 2>/dev/null | head -1)
+# 本机没有 MCA 温控电流节点（非小米 MCA 机型/内核不同）：守护不运行，WebUI 显示不支持
+[ -n "$N" ] || { log "未找到 wired_chg_curr 节点，实时充电电流守护不启动"; exit 0; }
 last=0; fix=0; was=0; off=0
 while true; do
   sleep 2
