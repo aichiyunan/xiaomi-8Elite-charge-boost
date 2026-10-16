@@ -154,9 +154,9 @@ fi
 menu $S4 "低电量延迟关机" "电量锁定 2%、关闭 30 秒关机提示，电压降到设定值再关机" "启用低电量延迟关机" "不启用低电量延迟关机"
 if [ $SEL = 1 ]; then MV=2800; [ "$DV" != - ] && MV=$DV; else MV=0; fi
 echo $MV > $D/shutdown_mv
-menu $((S4+1)) "公版 PPS 解锁" "第三方 PPS 充电头放行高功率快充，小米原装头不受影响" "关闭" "开启"
+menu $((S4+1)) "公版 PPS 解锁" "内置 FreePPS（Seyud，GPL-3.0）：第三方 PPS 头放行高功率快充，小米原装头照常走私有协议" "关闭" "开启"
 PPS=0; [ $SEL = 2 ] && PPS=1; echo $PPS > $D/pps
-menu $((S4+2)) "充电监测软件" "配合${MODNAME}使用的充电监测 App（充电监测 v5.1，含公版 PPS 控制中心磁贴）" "安装充电检测软件" "不安装"
+menu $((S4+2)) "充电监测软件" "配合${MODNAME}使用的充电监测 App（充电监测 v5.5，含公版 PPS 控制中心磁贴）" "安装充电检测软件" "不安装"
 CM=$SEL
 DR=0; DO=$D/dtbo.out; true > $DO 2>/dev/null || { DO=/dev/mcb_dtbo.out; true > $DO; }
 if [ "$DI$DT$DV$DZ" != "----" ]; then
@@ -189,7 +189,7 @@ fi
 [ $MV -gt 0 ] && ui_print "- 低电量延迟关机: 启用（${MV}mV，WebUI 可调）" || ui_print "- 低电量延迟关机: 不启用"
 if [ $PPS = 1 ]; then
   if [ -d /data/adb/modules/FreePPS ] && [ ! -f /data/adb/modules/FreePPS/disable ]; then ui_print "- 公版 PPS 解锁: 开启，但已安装 FreePPS，本模块此项自动停用"
-  else ui_print "- 公版 PPS 解锁: 开启（拔出充电器后放行，下次插入生效）"; [ "$(cat /sys/class/power_supply/usb/online 2>/dev/null)" = 1 ] || echo 1 > /sys/class/qcom-battery/pd_verifed 2>/dev/null; fi
+  else ui_print "- 公版 PPS 解锁: 开启（内置 FreePPS v1.7.0，重启后生效）"; fi
 else ui_print "- 公版 PPS 解锁: 关闭"; fi
 if [ "$CM" = 1 ]; then
   A=$MODPATH/apk/charge_monitor.apk; T=/data/local/tmp/charge_monitor.apk
@@ -212,7 +212,7 @@ set_perm_recursive $MODPATH 0 0 0755 0755
 ui_print "- 充电记录只在充电时写入，放电不记录"
 ui_print "- 重启后生效；不想重启可在 WebUI 设置里点启动"
 ui_print "- 致谢：酷安@低线阻狂魔、酷安@花橋桥（PPS 节点）"
-ui_print "        酷安@瓦力喀 / FreePPS（思路参考）"
+ui_print "        内置 FreePPS v1.7.0（Seyud / 酷安@瓦力喀，GPL-3.0，见 pps/README-FreePPS.txt）"
 ui_print "        酷安@久保Sama / 刷新率APP（高刷切换思路）"
 sh $MODPATH/dtbo/apply.sh desc >/dev/null 2>&1
 [ "$DR" != 0 ] && sed -i "s|^description=|description=❌ DTBO 刷入失败（$(grep "^! " $D/dtbo.out | tail -1 | sed "s/^! //")） ｜ |" $MODPATH/module.prop
