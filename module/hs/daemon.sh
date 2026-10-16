@@ -1,6 +1,7 @@
 #!/system/bin/sh
 # 原装头握手失败自动重试（实验性，默认关）：插入 20 秒后仍在 PD 普通充电（VBUS<11V、电荷泵没起来），
 # 用 input_suspend 1→0 让系统重走一次充电策略/协议认证；每次插入最多重试 2 次。开关 $D/hs
+# 与公版 PPS 解锁可同时开启：PPS 解锁同 FreePPS，充电中不写 pd_verifed（原装头由内核自己认证），这里只负责重试握手
 MODDIR=${0%/*}; D=/data/adb/mi_charge_boost; LOG=$D/hs.log
 until [ "$(getprop sys.boot_completed)" = "1" ]; do sleep 3; done
 if [ -f $D/hs.pid ] && kill -0 $(cat $D/hs.pid) 2>/dev/null; then exit 0; fi
