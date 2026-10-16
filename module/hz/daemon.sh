@@ -2,6 +2,8 @@
 # 高刷守护：开机恢复上次档位；亮屏每 5 秒刷新状态缓存；超频档被熄屏/系统打断后逐级拉回
 MODDIR=${0%/*}; MODDIR=${MODDIR%/hz}
 . $MODDIR/hz/common.sh
+# 高刷切换只适用于小米15（华星 o3_42 超频档）；其它机型不启动守护
+[ "$(cat $MODDIR/model 2>/dev/null || echo dada)" = dada ] || { echo 0 > $AVAILF; exit 0; }
 rmdir $LOCK 2>/dev/null; rm -f $FAILF $AVAILF
 until [ "$(getprop sys.boot_completed)" = "1" ]; do sleep 2; done
 sleep 20
