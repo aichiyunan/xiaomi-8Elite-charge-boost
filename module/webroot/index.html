@@ -97,6 +97,8 @@ input[type=datetime-local],.stp select{background:var(--in);color:var(--fg);bord
 .sht .ph{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
 .sht .ph b{font-size:17px}
 #sh3{z-index:60}
+.lgseg{display:flex;background:var(--in);border:1px solid var(--line);border-radius:9px;padding:2px;margin:0 8px}.lgseg button{border:0;background:none;color:var(--sub);border-radius:7px;padding:4px 10px;font-size:12px;line-height:1.3;white-space:nowrap}.lgseg button.on{background:var(--card);color:var(--fg);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+
 .sht .ph button{background:none;border:0;color:var(--fg);font-size:22px;line-height:1;padding:0 4px}
 .sht .bd{flex:1;overflow-y:auto;padding:10px 14px 30px;overscroll-behavior:contain}
 #sh{z-index:30}#sh2{z-index:25}
@@ -273,14 +275,15 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
 
 <div class="card" id="ppc">
 <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">公版 PPS 解锁</b><label class="tsw"><input type="checkbox" id="ppon"><i></i></label></div>
-<div style="font-size:11px;color:var(--sub);margin-top:6px">让第三方 PPS 充电头也能走高功率快充。按充电头区分：公版头（SVID 0000）充电中被系统清掉就马上锁回放行；小米原装头完全不碰，让它自己走私有协议认证。</div>
+<div style="font-size:11px;color:var(--sub);margin-top:6px">内置 FreePPS（Seyud，GPL-3.0）。让第三方 PPS 充电头也能走高功率快充，小米原装头照常走私有协议。PPS 逻辑完全由 FreePPS v1.7.0 原版程序执行（只改了文件路径），本开关对应它的 free 开关；公版头的金标动画也由 FreePPS 自动处理。已安装 FreePPS 模块时自动让出。</div>
 <div class="row" style="margin-top:6px"><span>状态</span><span id="ppst">读取中…</span></div>
 <div class="row"><span>当前充电头</span><span id="pphd">--</span></div>
 <div class="row"><span>充电头 PPS 能力</span><span id="ppap">--</span></div>
 <div class="row"><span>pd_verifed</span><span id="ppcur">--</span></div>
-<div class="row"><span>金标动画</span><span><label class="tsw"><input type="checkbox" id="ppgd"><i></i></label></span></div>
+<div class="row"><span>守护方式</span><span id="ppmd">--</span></div>
+<div class="row"><span>金标动画</span><span id="ppgd">FreePPS 内置（公版头自动）</span></div>
 <div class="row"><span>原装头握手失败自动重试<span style="font-size:10px;font-weight:600;color:#f59e0b;border:1px solid #f59e0b;border-radius:999px;padding:1px 6px;margin-left:4px">实验性</span></span><span><label class="tsw"><input type="checkbox" id="hson"><i></i></label></span></div>
-<div style="font-size:11px;color:var(--sub)">插入 20 秒后还没进快充（VBUS 低于 11V），自动暂停再恢复充电，让系统重新认证，每次插入最多 2 次。插过小米原装头后，拔出时不再强写 pd_verifed=1。</div>
+<div style="font-size:11px;color:var(--sub)">插入 20 秒后还没进快充（VBUS 低于 11V），自动暂停再恢复充电，让系统重新认证，每次插入最多 2 次。可与公版 PPS 解锁同时开启。</div>
 <details class="pplg"><summary>运行记录</summary><pre id="pplog" style="font-size:11px;white-space:pre-wrap;margin:4px 0 0;color:var(--sub);max-height:120px;overflow:auto">--</pre></details>
 </div>
 <div style="font-size:12px;color:var(--sub);margin:14px 4px 6px">实验性功能 · 免重启，效果因机型和系统版本而异，异常时请关闭</div>
@@ -294,9 +297,9 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
 
 <div class="card ack">
 <div><b>公版 PPS 解锁节点</b><span>酷安@低线阻狂魔、酷安@花橋桥</span></div>
-<div><b>PPS 放行思路参考</b><span>FreePPS · 酷安@瓦力喀</span></div>
+<div><b>内置 FreePPS</b><span>Seyud（酷安@瓦力喀）· GPL-3.0</span></div>
 <div><b>测试与反馈</b><span>各位酷友</span></div>
-<div class="nt">本模块的 PPS 功能为独立 shell 实现，未包含 FreePPS 代码。已安装 FreePPS 时此开关自动停用，避免冲突。</div>
+<div class="nt">「公版 PPS 解锁」内置 FreePPS v1.7.0（github.com/Seyud/FreePPS，GPL-3.0），只修改了路径常量，许可证、声明、补丁和修改后的源码在模块 pps/ 目录（FreePPS-LICENSE、FreePPS-NOTICES、freepps-paths.patch、FreePPS-src-v1.7.0-mcb.tar.gz、README-FreePPS.txt）。已安装 FreePPS 模块时内置版本自动让出，避免冲突。</div>
 </div>
 </div>
 <div class="pg" id="pg3">
@@ -367,7 +370,7 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
 <nav class="nav"><span class="ind" id="ind"></span><button data-p="0" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 11v2"/><path d="M10 9l-2 3h4l-2 3"/></svg><span>监控</span></button><button data-p="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-6"/></svg><span>图表</span></button><button data-p="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg><span>充电配置</span></button><button data-p="3" id="nav3" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M13 7l-3 4h4l-3 4"/></svg><span>高刷切换</span></button></nav>
 <div id="sh3" class="sht"><div class="mask" id="sh3m"></div><div class="pn">
 <div class="ph"><b>充放电日志管理</b><button id="sh3X">✕</button></div>
-<div class="bd"><div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px 10px"><label style="display:flex;align-items:center;gap:8px;font-size:14px"><input type="checkbox" id="lgAll">全选</label><button id="lgRf" style="border:0;background:none;color:#2b5cff;font-size:14px">刷新</button></div>
+<div class="bd"><div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px 10px"><label style="display:flex;align-items:center;gap:8px;font-size:14px;flex-shrink:0"><input type="checkbox" id="lgAll">全选</label><div class="lgseg" id="lgSeg"><button data-t="c" class="on">充电日志</button><button data-t="d">放电日志</button></div><button id="lgRf" style="border:0;background:none;color:#2b5cff;font-size:14px;flex-shrink:0;padding:8px 0 8px 6px">刷新</button></div>
 <div class="card" id="lgList"><div class="empty">读取中…</div></div>
 <div id="lgMsg" style="font-size:12px;color:#16a34a;padding:6px 2px;word-break:break-all"></div>
 <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 2px"><span id="lgSel" style="font-size:13px;color:var(--sub)">已选择 0 项</span><button id="lgDel" style="border:1px solid #ef4444;color:#ef4444;background:none;border-radius:10px;padding:8px 18px;font-size:14px">删除所选</button></div>
@@ -812,14 +815,15 @@ $('tron').onchange=async()=>{const v=$('tron').checked?1:0;$('tron').disabled=tr
   await exec('sh '+TR+' set '+v);await trStat();};
 
 const PP=MOD+'/pps/pps.sh';
-function ppShow(j){$('ppon').checked=j.want==1;$('ppgd').checked=j.gold==1;$('ppon').disabled=j.avail!=1;$('ppgd').disabled=j.avail!=1||j.want!=1;
-  $('ppst').textContent=j.avail!=1?'未找到 pd_verifed 节点，本机不支持':j.want!=1?'已关闭（系统默认）':j.fp==1?'已安装 FreePPS，本项自动停用':j.online==1?(j.svid==='0000'?(j.cur=='1'?'已放行（充电中）':'锁定中…'):'充电中（非公版 PPS 头）'):(j.cur=='1'?'已开启 · 等待下次插入':'已开启');
-  $('ppst').style.color=(j.want==1&&j.fp!=1&&j.cur=='1')?'#16a34a':'';
-  $('pphd').textContent=j.online==1?j.head:'未连接';$('ppap').textContent=(j.online==1&&j.apdo)?j.apdo+' W':'--';$('ppcur').textContent=j.avail==1?j.cur:'--';}
+function ppShow(j){$('ppon').checked=j.want==1;$('ppon').disabled=j.avail!=1;
+  const on=j.avail==1&&j.want==1&&j.fp!=1,mi=/2717/.test(j.svid||'');
+  const md=j.mode||'';$('ppst').textContent=j.avail!=1?'未找到 pd_verifed 节点，本机不支持':j.want!=1?'已关闭（系统默认）':j.fp==1?'已安装 FreePPS 模块，内置版本让出':j.dis==1?'模块已禁用（free=0）':md=='-'||!md?'守护未运行':md.indexOf('yield')>=0?'已让出给 FreePPS 模块':j.online!=1?(j.cur=='1'?'已锁定 · 等待插入':'未锁定 · 拔出后由 FreePPS 补写'):mi?'小米原装头 · 系统自行认证':j.cur=='1'?'已锁定放行（充电中）':'本次未放行 · 拔出后由 FreePPS 补写';
+  $('ppst').style.color=on&&j.mode&&j.mode!='-'&&(j.online==1&&mi||j.cur=='1')?'#16a34a':'';
+  $('pphd').textContent=j.online!=1?'未连接':j.head;$('ppap').textContent=(j.online==1&&j.apdo)?j.apdo+' W':'--';$('ppcur').textContent=j.avail==1?j.cur:'--';
+  $('ppmd').textContent=j.fp==1||md.indexOf('yield')>=0?'FreePPS 模块':md.indexOf('FreePPS')>=0?'内置 FreePPS 1.7.0（uevent）· free='+(j.free||'?'):md.indexOf('shell')>=0?'shell 兜底（FreePPS 无法运行）':'未运行';}
 async function ppStat(){const r=await exec('sh '+PP+' status');try{ppShow(JSON.parse(r.stdout.trim().split('\n').pop()));}catch(e){$('ppst').textContent='读取失败';}
   const l=await exec('sh '+PP+' log');$('pplog').textContent=(l.stdout||'--').trim().split('\n').reverse().slice(0,8).join('\n');}
-$('ppon').onchange=async()=>{const v=$('ppon').checked?1:0;$('ppon').disabled=true;$('ppst').textContent='写入中…';await exec('sh '+PP+' set '+v);await ppStat();try{ksu.toast(v?'公版 PPS 解锁已开启，下次插入生效':'公版 PPS 解锁已关闭')}catch(e){}};
-$('ppgd').onchange=async()=>{await exec('sh '+PP+' gold '+($('ppgd').checked?1:0));ppStat();};
+$('ppon').onchange=async()=>{const v=$('ppon').checked?1:0;$('ppon').disabled=true;$('ppst').textContent='写入中…';await exec('sh '+PP+' set '+v);await ppStat();try{ksu.toast(v?'公版 PPS 解锁已开启（FreePPS free=1，充电中开启的话第三方头请重新插拔一次）':'公版 PPS 解锁已关闭（FreePPS free=0：未充电恢复系统默认，充电中不动）')}catch(e){}};
 const HS=MOD+'/hs/hs.sh';
 async function hsStat(){const r=await exec('sh '+HS+' status');try{$('hson').checked=JSON.parse(r.stdout.trim().split('\n').pop()).want==1;}catch(e){}
   const l=await exec('sh '+HS+' log');const t=(l.stdout||'').trim();if(t){const a=t.split('\n').reverse().slice(0,4).join('\n');$('pplog').textContent=a+'\n'+$('pplog').textContent;}}
@@ -832,9 +836,13 @@ const LG=MOD+'/logs.sh';
 function fsz(b){return b>1048576?(b/1048576).toFixed(1)+' MB':b>1024?Math.round(b/1024)+' KB':b+' B';}
 function fdt(t){const d=new Date(t*1000),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());}
 function lgCnt(){const n=document.querySelectorAll('#lgList .lgc:checked').length;T('lgSel','已选择 '+n+' 项');}
-async function lgLoad(){const r=await exec('sh '+LG+' list');const L=(r.stdout||'').trim().split('\n').filter(Boolean).map(l=>l.split(','));
+let lgType=(()=>{try{return sessionStorage.getItem('lgType')==='d'?'d':'c'}catch(e){return 'c'}})();
+function lgSegShow(){document.querySelectorAll('#lgSeg button').forEach(b=>b.classList.toggle('on',b.dataset.t===lgType));}
+document.querySelectorAll('#lgSeg button').forEach(b=>b.onclick=()=>{if(lgType===b.dataset.t)return;lgType=b.dataset.t;try{sessionStorage.setItem('lgType',lgType)}catch(e){}lgSegShow();T('lgMsg','');lgLoad();});
+lgSegShow();
+async function lgLoad(){const r=await exec('sh '+LG+' list');const L=(r.stdout||'').trim().split('\n').filter(Boolean).map(l=>l.split(',')).filter(a=>(a[4]==='d'?'d':'c')===lgType);
   $('lgAll').checked=false;
-  Hm('lgList',L.length?L.map(([n,e,s,lv,t])=>{const d=t==='d';return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)"><input type="checkbox" class="lgc" value="${n}"><div style="flex:1;min-width:0;font-size:12px;color:var(--sub)"><div style="display:flex;gap:10px;flex-wrap:wrap"><div>${d?'<span style="color:#f59e0b">开始放电</span>':'开始充电'}<br><b style="color:var(--fg);font-size:13px">${fdt(+n)}</b></div><div>${lv=='1'?(d?'放电中':'充电中'):(d?'放电结束':'充电结束')}<br><b style="color:var(--fg);font-size:13px">${lv=='1'?'--':fdt(+e)}</b></div></div>${fsz(+s)}</div><button data-x="${n}" style="border:0;background:none;color:#2b5cff;font-size:13px">导出</button><button data-d="${n}" style="border:0;background:none;color:#ef4444;font-size:13px">删除</button></div>`}).join(''):'<div class="empty">还没有日志，充电和拔掉充电器后都会自动记录</div>');
+  Hm('lgList',L.length?L.map(([n,e,s,lv,t])=>{const d=t==='d';return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)"><input type="checkbox" class="lgc" value="${n}"><div style="flex:1;min-width:0;font-size:12px;color:var(--sub)"><div style="display:flex;gap:10px;flex-wrap:wrap"><div>${d?'<span style="color:#f59e0b">开始放电</span>':'开始充电'}<br><b style="color:var(--fg);font-size:13px">${fdt(+n)}</b></div><div>${lv=='1'?(d?'放电中':'充电中'):(d?'放电结束':'充电结束')}<br><b style="color:var(--fg);font-size:13px">${lv=='1'?'--':fdt(+e)}</b></div></div>${fsz(+s)}</div><button data-x="${n}" style="border:0;background:none;color:#2b5cff;font-size:13px">导出</button><button data-d="${n}" style="border:0;background:none;color:#ef4444;font-size:13px">删除</button></div>`}).join(''):'<div class="empty">'+(lgType==='d'?'还没有放电日志，拔掉充电器后会自动记录':'还没有充电日志，插上充电器后会自动记录')+'</div>');
   document.querySelectorAll('#lgList .lgc').forEach(c=>c.onchange=lgCnt);
   document.querySelectorAll('#lgList [data-x]').forEach(b=>b.onclick=async()=>{T('lgMsg','导出中…');const r=await exec('sh '+LG+' export '+b.dataset.x);const m=(r.stdout||r.stderr||'').trim()||'! 导出失败';T('lgMsg',m);try{ksu.toast(m.replace(/^! /,'导出失败：').replace('导出失败：导出失败','导出失败'))}catch(e){}});
   document.querySelectorAll('#lgList [data-d]').forEach(b=>b.onclick=async()=>{await exec('sh '+LG+' del '+b.dataset.d);lgLoad();});
