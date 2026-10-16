@@ -4,7 +4,7 @@
 
 **小米 / 红米 骁龙 8 至尊版系列充电增强模块**
 
-![version](https://img.shields.io/badge/version-v8.4.9-orange)
+![version](https://img.shields.io/badge/version-v8.5.3-orange)
 ![device](https://img.shields.io/badge/device-Xiaomi%2015%20%7C%2015%20Pro%20%7C%20K80%20Pro%20%7C%20K90%20%7C%20K90%20Ultra-blue)
 ![root](https://img.shields.io/badge/root-KernelSU%20%7C%20Magisk-green)
 ![author](https://img.shields.io/badge/author-酷安@鱼楠-red)
@@ -17,11 +17,11 @@
 
 | 文件 | 说明 |
 | --- | --- |
-| [`releases/Mi8Elite-charge-boost_v8.4.9.zip`](releases/Mi8Elite-charge-boost_v8.4.9.zip) | 刷入包，在 KernelSU / Magisk 中安装 |
+| [`releases/Mi8Elite-charge-boost_v8.5.3.zip`](releases/Mi8Elite-charge-boost_v8.5.3.zip) | 刷入包，在 KernelSU / Magisk 中安装 |
 | [`module/`](module/) | 模块完整源码 |
 | [`CHANGELOG.md`](CHANGELOG.md) | 全部版本更新日志（v8.0.7 起，历史刷入包在 `releases/`） |
 
-md5：`6b23ac841c21b648e43ae967c7311d6c`
+md5：`2549a1b955a91e789910775a73bf2426`
 
 ---
 
@@ -41,7 +41,7 @@ md5：`6b23ac841c21b648e43ae967c7311d6c`
 - 保留原厂 AVB 签名结构与 salt
 
 ### 🔌 公版 PPS 解锁
-第三方 PPS 充电头放行高功率快充，小米原装头不受影响。已装 FreePPS 时本项自动停用。
+内置 FreePPS v1.7.0（Seyud / 酷安@瓦力喀，GPL-3.0），第三方 PPS 充电头放行高功率快充，小米原装头照常走私有协议。已启用 FreePPS 模块时内置版自动让出。
 
 ### 🌡️ 免重启调节
 - **温控解除**：关闭有线充电温控降速（`wired_thermal_remove`）
@@ -91,5 +91,5 @@ md5：`6b23ac841c21b648e43ae967c7311d6c`
 
 - 酷安@低线阻狂魔
 - 酷安@花橋桥（PPS 节点）
-- 酷安@瓦力喀 / FreePPS（思路参考）
+- [FreePPS](https://github.com/Seyud/FreePPS)（Seyud / 酷安@瓦力喀，GPL-3.0，已内置）
 - 酷安@久保Sama / 刷新率 APP（高刷切换思路）
