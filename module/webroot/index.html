@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>小米15充电加速</title>
+<title>充电加速</title>
 <script>try{if(localStorage.getItem("theme")==="light")document.documentElement.dataset.theme="light"}catch(e){}</script>
 <style>
 :root{--bg:#0f1115;--card:#181b22;--fg:#e8eaf0;--sub:#8b93a7;--line:#262a33;--nav:#1d2029;--in:#0f1115;--bd:#262a33;--okb:#14532d;--okf:#86efac;--red:#fca5a5;--icb:#1c2a4a;--cs:dark}
@@ -230,12 +230,12 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
 <div class="card in dz-in" id="dz">
 <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">参数</b><span id="dzst" style="font-size:12px;color:var(--sub)">读取中…</span></div>
 <div class="it"><div class="hd"><span>快充电流上限</span><label><input type="number" id="dzin" min="9000" max="20500" step="1" value="15500" inputmode="numeric">mA</label></div>
-<input type="range" id="dzi" min="9000" max="20500" step="100" value="15500"><div class="rg"><span>9000</span><span>20500 mA</span></div></div>
+<input type="range" id="dzi" min="9000" max="20500" step="100" value="15500"><div class="rg"><span>9000</span><span id="dzimx">20500 mA</span></div></div>
 <div class="it"><div class="hd"><span>内核关机电压</span><label><input type="number" id="dzvn" min="2400" max="3400" step="1" value="3400" inputmode="numeric">mV</label></div>
 <input type="range" id="dzv" min="2400" max="3400" step="10" value="3400"><div class="rg"><span>2400</span><span>3400 mV</span></div></div>
 <div class="it"><div class="hd"><span>满速/断充温度</span><label><input type="number" id="dztn" min="45" max="58" step="1" value="58" inputmode="numeric">°C</label></div>
 <input type="range" id="dzt" min="45" max="58" step="1" value="58"><div class="rg"><span>45</span><span>58 °C</span></div></div>
-<div class="it"><div class="hd"><span>屏幕超频</span><span id="dzzb" style="display:flex;gap:6px"><button data-z="165" style="padding:4px 12px;font-size:12px;border-radius:999px">165Hz</button><button data-z="-" style="padding:4px 12px;font-size:12px;border-radius:999px">不超频</button></span></div>
+<div class="it" id="dzzr"><div class="hd"><span>屏幕超频</span><span id="dzzb" style="display:flex;gap:6px"><button data-z="165" style="padding:4px 12px;font-size:12px;border-radius:999px">165Hz</button><button data-z="-" style="padding:4px 12px;font-size:12px;border-radius:999px">不超频</button></span></div>
 <div style="font-size:11px;color:var(--sub)">华星屏添加 132/144/155/165Hz 档位</div></div>
 <div style="font-size:11px;color:var(--sub);padding:8px 0 0">设定温度以下满速，超过即停充。写入 dtbo 并重算 AVB，重启后生效；原版自动备份。</div>
 <div class="bt"><button class="w" id="dzok">写入（重启生效）</button><button class="w red" id="dzrst">还原原版</button></div>
@@ -244,7 +244,7 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
 <div class="card in" id="prc">
 <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">小米私有协议</b><span id="prst" style="font-size:12px;color:var(--sub)">读取中…</span></div>
 <div class="prg"><div class="pri"><span>100W 协议</span><label class="tsw"><input type="checkbox" id="pr100"><i></i></label></div><div class="pri"><span>120W 协议</span><label class="tsw"><input type="checkbox" id="pr120"><i></i></label></div></div>
-<div style="font-size:11px;color:var(--sub);margin-top:8px">默认原厂 90W。开启后提高小米私有快充的功率上限，需小米 100W/120W 原装充电头。写入 dtbo，重启生效。实际功率还受充电泵和电池限制。</div>
+<div style="font-size:11px;color:var(--sub);margin-top:8px" id="prds">默认原厂 90W。开启后提高小米私有快充的功率上限，需小米 100W/120W 原装充电头。写入 dtbo，重启生效。实际功率还受充电泵和电池限制。</div>
 <details class="pplg" id="prlg"><summary>修改日志</summary><pre id="prlog" style="font-size:11px;white-space:pre-wrap;margin:4px 0 0;color:var(--sub);max-height:160px;overflow:auto">--</pre></details>
 </div>
 </details>
@@ -450,6 +450,16 @@ function chart(cv,series,from,to,opt){
 }
 const mm=a=>{a=a.filter(x=>x!==null);return a.length?[Math.min(...a),Math.max(...a)]:null;};
 
+/* ---------- 机型参数（v8.4.9 多机型：model.sh 输出 JSON） ---------- */
+let MDL={ok:1,code:'dada',name:'小米15',modname:'小米15充电加速模块',imin:9000,imax:20500,istock:15500,vq:4580,v0:3050,pw0:90,pwo:[100,120],hz:1};
+async function mdlLoad(){try{const r=await exec('sh '+MOD+'/model.sh');const j=JSON.parse(r.stdout.trim().split('\n').pop());if(j.ok==1)MDL=j;}catch(e){}
+  document.title=MDL.modname||'充电加速';
+  ['dzi','dzin'].forEach(k=>{$(k).max=MDL.imax;$(k).min=MDL.imin;});$('dzimx').textContent=MDL.imax+' mA';
+  if(!$('dzi').dataset.set){$('dzi').value=MDL.istock;$('dzin').value=MDL.istock;}
+  $('dzzr').style.display=MDL.hz==1?'':'none';if(MDL.hz!=1)dzZ('-');
+  [100,120].forEach(v=>{const el=$('pr'+v);if(el)el.closest('.pri').style.display=MDL.pwo.includes(v)?'':'none';});
+  if(!MDL.pwo.length)$('pr100').closest('.prg').style.display='none';
+  $('prds').textContent=MDL.pwo.length?('默认原厂 '+MDL.pw0+'W。开启后提高小米私有快充的功率上限，需小米 '+MDL.pwo.join('W/')+'W 原装充电头。写入 dtbo，重启生效。实际功率还受充电泵和电池限制。'):('本机原厂已是 '+MDL.pw0+'W 小米私有协议，无需修改。');}
 /* ---------- 设备信息 ---------- */
 async function info(){
   const r=await exec('sh '+MOD+'/sysinfo.sh;getprop ro.soc.model;getprop ro.build.version.release');
@@ -790,7 +800,7 @@ function go(p){
 applyTheme((()=>{try{return localStorage.getItem('theme')}catch(e){return null}})()==='light'?'light':'dark');
 $('thm').onclick=()=>{applyTheme(document.documentElement.dataset.theme==='light'?'dark':'light');if(page===1)draw();if(shRows&&$('sh').classList.contains('on'))dSel(shIdx);if(recsLoaded)renderRecs();};
 navBtns.forEach(b=>b.addEventListener('pointerdown',()=>go(+b.dataset.p)));
-(async()=>{await info();await exec(`[ -f ${D}/ps.cache ] && [ -f ${D}/detail.list ] || sh ${MOD}/detect.sh`);initSet();tick();loadRecs();setInterval(tick,1000);requestAnimationFrame(loop);})();
+(async()=>{await info();await mdlLoad();await exec(`[ -f ${D}/ps.cache ] && [ -f ${D}/detail.list ] || sh ${MOD}/detect.sh`);initSet();tick();loadRecs();setInterval(tick,1000);requestAnimationFrame(loop);})();
 
 const TR=MOD+'/tr/tr.sh';
 function trShow(j){$('tron').checked=j.want==1;$('tron').disabled=j.avail!=1;
@@ -878,28 +888,28 @@ document.querySelectorAll('#dzzb button').forEach(b=>b.onclick=()=>dzZ(b.dataset
 async function dtStat(){const r=await exec('sh '+DT+' status');const a=r.stdout.trim().split(' ').map(x=>x==='-'?'原厂':x);
   const raw=r.stdout.trim().split(' ');if(raw[0]==='mod')dzZ(raw[4]||'-');
   T('dzst',a[0]==='mod'?'✅ 已应用 '+a[1]+'mA / '+a[2]+'mV / '+(a[3]||58)+'°C'+(raw[4]==='165'?' / 165Hz':'')+(raw[5]&&raw[5]!=='-'?' / 协议 '+raw[5]+'W':''):a[0]==='stock'?'原版':a[0]==='changed'?'⚠️ dtbo 已还原，请重新写入':'未修改');
-  if(a[0]==='mod'||a[0]==='changed'){dzSet('dzi',a[1]);dzSet('dzv',a[2]);dzSet('dzt',a[3]||58);}}
+  if(a[0]==='mod'||a[0]==='changed'){$('dzi').dataset.set=1;dzSet('dzi',a[1]);dzSet('dzv',a[2]);dzSet('dzt',a[3]||58);}}
 async function dtRun(arg,btn){btn.disabled=true;$('dzlog').hidden=false;$('dzlog').textContent='正在处理，约 5 秒…';
   let r=await exec('sh '+DT+' '+arg+' 2>&1');let o=(r.stdout||'')+(r.stderr||'');$('dzlog').textContent=o;
   if(o.includes('原厂镜像校验未通过')&&confirm('原厂镜像校验未通过：当前 dtbo 不是已收录的原厂镜像（官改包可能有小改动）。\n\n是否备份当前 dtbo，并以当前镜像为底修改刷入？\n（不逐项比对原厂值，可随时写回备份）')){
     $('dzlog').textContent='以当前镜像为底写入中…';r=await exec('DTBO_CUR=1 sh '+DT+' '+arg+' 2>&1');$('dzlog').textContent=(r.stdout||'')+(r.stderr||'');}
   btn.disabled=false;dtStat();}
-$('dzok').onclick=()=>{const i=dzSet('dzi',$('dzin').value),v=dzSet('dzv',$('dzvn').value),t=dzSet('dzt',$('dztn').value);if(confirm('写入 dtbo：快充 '+i+' mA、关机电压 '+v+' mV、断充 '+t+'°C、屏幕'+(DZZ==='165'?'超频 165Hz':'不超频')+'？\n写入后需重启生效'))dtRun(i+' '+v+' '+t+' '+DZZ,$('dzok'));};
+$('dzok').onclick=()=>{const i=dzSet('dzi',$('dzin').value),v=dzSet('dzv',$('dzvn').value),t=dzSet('dzt',$('dztn').value);if(confirm('写入 dtbo：快充 '+i+' mA、关机电压 '+v+' mV、断充 '+t+'°C'+(MDL.hz==1?'、屏幕'+(DZZ==='165'?'超频 165Hz':'不超频'):'')+'？\n写入后需重启生效'))dtRun(i+' '+v+' '+t+' '+DZZ,$('dzok'));};
 const PR=MOD+'/proto/proto.sh';let prBusy=false;
 async function prLog(){const r=await exec('sh '+PR+' log 2>&1');const t=((r.stdout||'')+(r.stderr||'')).trim();$('prlog').textContent=t||'暂无记录';}
 async function prStat(){if(prBusy)return;const r=await exec('sh '+PR+' status');try{const j=JSON.parse(r.stdout.trim().split('\n').pop());
   $('pr100').checked=j.want==100;$('pr120').checked=j.want==120;
-  const w=j.want==0?'原厂 90W':j.want+'W',a=j.applied==0?'原厂 90W':j.applied+'W';
-  $('prst').textContent=j.want!=j.applied?'⚠️ 设定 '+w+'，未写入':j.pending==1?'⏳ '+a+' · 重启生效':(j.applied==0?'原厂 90W':'✅ '+a+' 已生效');
+  const P0='原厂 '+(j.pw0||MDL.pw0)+'W',w=j.want==0?P0:j.want+'W',a=j.applied==0?P0:j.applied+'W';
+  $('prst').textContent=j.want!=j.applied?'⚠️ 设定 '+w+'，未写入':j.pending==1?'⏳ '+a+' · 重启生效':(j.applied==0?P0:'✅ '+a+' 已生效');
   $('prst').style.color=j.want!=j.applied?'#f59e0b':(j.applied!=0&&j.pending!=1?'#16a34a':'');}catch(e){$('prst').textContent='读取失败';}}
 async function prSet(v,el){const on=el.checked,n=on?v:0;
-  if(!confirm(on?'开启 '+v+'W 小米私有协议？\n将写入 dtbo，重启后生效（需小米 '+v+'W 原装充电头）':'关闭 '+v+'W 协议，恢复原厂 90W？\n将写入 dtbo，重启后生效')){el.checked=!on;return;}
+  if(!confirm(on?'开启 '+v+'W 小米私有协议？\n将写入 dtbo，重启后生效（需小米 '+v+'W 原装充电头）':'关闭 '+v+'W 协议，恢复原厂 '+MDL.pw0+'W？\n将写入 dtbo，重启后生效')){el.checked=!on;return;}
   prBusy=true;$('pr100').disabled=$('pr120').disabled=true;if(on){$('pr100').checked=v==100;$('pr120').checked=v==120;}
   $('prst').textContent='写入中，约 5 秒…';$('prlog').textContent='正在处理…';
   let r=await exec('sh '+PR+' set '+n+' 2>&1');let o=(r.stdout||'')+(r.stderr||'');$('prlog').textContent=o;
   if(o.includes('原厂镜像校验未通过')&&confirm('原厂镜像校验未通过：当前 dtbo 不是已收录的原厂镜像（官改包可能有小改动）。\n\n是否备份当前 dtbo，并以当前镜像为底修改刷入？\n（不逐项比对原厂值，可随时写回备份）')){
     $('prlog').textContent='以当前镜像为底写入中…';r=await exec('DTBO_CUR=1 sh '+PR+' set '+n+' 2>&1');o=(r.stdout||'')+(r.stderr||'');$('prlog').textContent=o;}
-  try{ksu.toast(/^! /m.test(o)?'写入失败，详见日志':(n?n+'W 协议已写入，重启生效':'已恢复原厂 90W，重启生效'))}catch(e){}
+  try{ksu.toast(/^! /m.test(o)?'写入失败，详见日志':(n?n+'W 协议已写入，重启生效':'已恢复原厂 '+MDL.pw0+'W，重启生效'))}catch(e){}
   prBusy=false;$('pr100').disabled=$('pr120').disabled=false;await prStat();dtStat();}
 $('pr100').onchange=e=>prSet(100,e.target);$('pr120').onchange=e=>prSet(120,e.target);
 $('dzrst').onclick=()=>{if(confirm('写回原版 dtbo？重启后生效'))dtRun('restore',$('dzrst'));};
