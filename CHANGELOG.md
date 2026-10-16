@@ -2,6 +2,18 @@
 
 所有版本刷入包都在 [`releases/`](releases/) 目录。
 
+## v8.5.3（2026-10-16，含 v8.5.0–v8.5.2 的改动）
+
+- 公版 PPS 解锁改为内置 FreePPS v1.7.0（Seyud / 酷安@瓦力喀，GPL-3.0），只改了路径常量，附带许可证、声明、补丁和修改后的源码
+- 已安装并启用 FreePPS 模块时，内置 FreePPS 自动让出，停用或卸载后恢复
+- 内置 FreePPS 无法运行时改用 shell 兜底
+- WebUI 的 PPS 页新增「守护方式」显示；金标动画由 FreePPS 对公版头自动处理，去掉手动开关
+- 原装头握手重试可与公版 PPS 解锁同时开启
+- 充放电日志页新增充电 / 放电切换
+- 内置充电监测 v5.5
+
+刷入包：[`releases/Mi8Elite-charge-boost_v8.5.3.zip`](releases/Mi8Elite-charge-boost_v8.5.3.zip)　md5 `2549a1b955a91e789910775a73bf2426`
+
 ## v8.4.9（2026-10-16）
 
 - 打包名改为 `Mi8Elite-charge-boost`
