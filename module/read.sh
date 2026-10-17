@@ -15,7 +15,7 @@ echo "online=$on"
 if [ -n "$USB" ]; then rd usb_v $USB/voltage_now; rd usb_i $USB/input_current_now; fi
 [ -n "$UT" ] && rd usb_type $UT
 if [ -f $D/detail.list ]; then
-  while IFS='|' read -r lab path; do [ -r "$path" ] && { IFS= read -r v < "$path"; echo "dt|$lab=$v"; }; done < $D/detail.list
+  while IFS='|' read -r lab path; do [ -r "$path" ] && { IFS= read -r v < "$path"; case "$path" in *charge_counter) case "$v" in *[!0-9-]*|"") ;; *) v=$((v/1000));; esac;; esac; echo "dt|$lab=$v"; }; done < $D/detail.list
 fi
 for e in $TZ; do n=${e%%:*}; f=${e#*:}; [ -r $f ] && { IFS= read -r v < $f; echo "tz|$n=$v"; }; done
 [ -f $D/current ] && { IFS= read -r v < $D/current; echo "rec=$v"; }
