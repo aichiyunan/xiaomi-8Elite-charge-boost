@@ -3,10 +3,16 @@
 # 电池电压连续低于设定值后直接关机（不弹倒计时）
 MODDIR=${0%/*}
 . $MODDIR/common.sh
+# 关机电压下限 = DTBO 内核关机电压（已写入的修改值，未修改则用本机原厂值）；低于它内核会先关机，设了也没用
+vfloor(){ set -- $(sh $MODDIR/dtbo/apply.sh status 2>/dev/null)
+  if [ "$1" = mod ] && [ -n "$3" ]; then VF=$3; else VF=$(sh $MODDIR/model.sh 2>/dev/null | sed -n 's/.*"v0":\([0-9]*\).*/\1/p'); fi
+  case "$VF" in ''|*[!0-9]*) VF=2700;; esac; [ "$VF" -gt 3400 ] && VF=3400; }
+[ "$1" = floor ] && { vfloor; echo $VF; exit 0; }
 if [ -f $D/lowbat.pid ] && kill -0 $(cat $D/lowbat.pid) 2>/dev/null; then exit 0; fi
 echo $$ > $D/lowbat.pid
 find_ps
 held=0; low=0; en_off=0; lt5=0
+vfloor
 # 写入当前放电日志（logger.sh 负责开 / 结束放电日志）
 dl(){ f=$(cat $D/dcurrent 2>/dev/null); [ -n "$f" ] && [ -f $D/dlogs/$f ] && echo "[$(date '+%H:%M:%S')] [低电量] $*" >> $D/dlogs/$f; }
 # 小米 shutdown_delay 节点：置 1 时系统弹出 30 秒关机倒计时；*_en 是功能开关
@@ -45,7 +51,7 @@ off_now(){
 }
 while true; do
   MV=$(cat $D/shutdown_mv 2>/dev/null); [ -n "$MV" ] || MV=2800
-  [ "$MV" -gt 0 ] 2>/dev/null && { [ "$MV" -lt 2700 ] && MV=2700; [ "$MV" -gt 3400 ] && MV=3400; }
+  [ "$MV" -gt 0 ] 2>/dev/null && { [ "$MV" -lt $VF ] && MV=$VF; [ "$MV" -gt 3400 ] && MV=3400; }
   if [ "$MV" = "0" ] || [ -z "$BAT" ]; then release; sde_restore; sleep 60; find_ps; scan_sd; continue; fi
   sde_off
   cap=$(cat $BAT/capacity 2>/dev/null); st=$(cat $BAT/status 2>/dev/null)
