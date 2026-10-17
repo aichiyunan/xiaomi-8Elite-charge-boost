@@ -153,6 +153,7 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
 .hzg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .hzg button{padding:14px 0;font-size:18px;font-weight:600;border-radius:12px}.hzg button span{display:block;font-size:11px;font-weight:400;opacity:.75;margin-top:2px}
 .hzg button:disabled{opacity:.45}
+#ccmbx input:disabled,#cwbx input:disabled,#cwbx button:disabled{pointer-events:none}
 .hzp{margin:0;white-space:pre-wrap;word-break:break-all;font-size:11px;color:var(--sub);max-height:240px;overflow:auto}
 .hzm{display:flex;justify-content:space-between;align-items:center;cursor:pointer}.hzm b{display:block;font-size:14px}.hzm i{font-style:normal;font-size:12px;color:var(--sub)}.hzm span{font-size:20px;color:var(--sub)}
 .fpb{text-align:center;padding:6px 0 10px}.fpb .n{font-size:40px;font-weight:700;color:#2b5cff;font-variant-numeric:tabular-nums;line-height:1.1}.fpb .s{font-size:12px;color:var(--sub);margin-top:4px}
@@ -253,7 +254,7 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
 <div class="card dz-in" id="ccc">
 <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">实时充电电流</b><label class="tsw"><input type="checkbox" id="ccon"><i></i></label></div>
 <div style="font-size:11px;color:var(--sub);margin-top:6px">免重启，充电中调节的上限在拔出充电器 3 秒后生效，未充电时调节立即保存。最高不超过 DTBO 里写入的快充电流和断充温度（改 DTBO 重启后跟着变），实际电流还受电量和温度影响；被系统温控改写会自动补写，关闭后交还系统温控。</div>
-<div class="it"><div class="hd"><span>电流上限</span><label><input type="number" id="ccmn" min="1000" max="22000" step="100" value="22000" inputmode="numeric">mA</label></div>
+<div class="it" id="ccmbx"><div class="hd"><span>电流上限</span><label><input type="number" id="ccmn" min="1000" max="22000" step="100" value="22000" inputmode="numeric">mA</label></div>
 <input type="range" id="ccm" min="1000" max="22000" step="100" value="22000"><div class="rg"><span>1000</span><span id="ccmx">22000 mA</span></div></div>
 <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><b style="font-size:16px">断充温控墙</b><label class="tsw"><input type="checkbox" id="cwon"><i></i></label></div>
 <div id="cwbx">
@@ -343,9 +344,9 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
   <div class="row"><span>低电量延迟关机</span><span><label><input type="checkbox" id="smvon" style="accent-color:#2b5cff;vertical-align:-2px"> 启用</label></span></div>
   <div style="padding:6px 0 4px;border-bottom:1px solid var(--line)">
     <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--sub)">关机电压</span><b id="smvv">2800 mV</b></div>
-    <input type="range" id="smv" min="2700" max="3400" step="50" value="2800">
-    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--sub)"><span>2700</span><span>3400 mV</span></div>
-    <div style="font-size:11px;color:var(--sub);margin-top:4px">已完全屏蔽小米 30 秒关机倒计时，电压到达设定值后直接关机</div>
+    <input type="range" id="smv" min="2700" max="3400" step="10" value="2800">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--sub)"><span id="smvmn">2700</span><span>3400 mV</span></div>
+    <div style="font-size:11px;color:var(--sub);margin-top:4px">已完全屏蔽小米 30 秒关机倒计时，电压到达设定值后直接关机；最低值跟随 DTBO 内核关机电压（<span id="smvsrc">--</span>），更低内核会先关机</div>
   </div>
   <div class="row"><span>延迟关机服务</span><span id="lbst">--</span></div>
   <button class="w" id="bstart">启动后台服务（首次安装免重启）</button>
@@ -549,7 +550,7 @@ function eta(ds,o,I,st){
   const n=g('预计充满');if(n!==null&&n>0)return fmtDur(n);
   const mA=x=>x===null?null:(Math.abs(x)>100000?x/1000:x);
   const full=mA(num(o.full)),cap=num(o.cap);
-  let r=mA(g('剩余容量(RM)'));if(r===null&&cap!==null&&full)r=cap/100*full;
+  let r=g('剩余容量(RM)');if(r!==null&&Math.abs(r)>20000)r/=1000;if(r===null&&cap!==null&&full)r=cap/100*full;
   if(!full||r===null)return '--';
   const now=Date.now(),a=H.filter(h=>h.t>now-30000&&h.i>0).map(h=>h.i);
   const Ia=a.length?a.reduce((x,y)=>x+y,0)/a.length:I;
@@ -563,7 +564,7 @@ function eta(ds,o,I,st){
 function fmtDetail(k,v){
   const x=num(v);if(x===null||String(x)!==v.trim())return v;
   if(/电压/.test(k))return (Math.abs(x)>100000?(x/1000).toFixed(0):x)+' mV';
-  if(/QMAX|容量/.test(k))return (Math.abs(x)>100000?Math.round(x/1000):x)+' mAh';
+  if(/QMAX|容量/.test(k))return (Math.abs(x)>(/RM/.test(k)?20000:100000)?Math.round(x/1000):x)+' mAh';
   if(/SOH/.test(k))return x+' %';
   if(/电流上限/.test(k))return (Math.abs(x)>100000?(x/1e6).toFixed(2):(x/1000).toFixed(2))+' A';
   if(/预计充满/.test(k))return x>0?fmtDur(x):'--';
@@ -781,7 +782,7 @@ const saveMv=()=>exec(`echo ${$('smvon').checked?$('smv').value:0} > ${D}/shutdo
 $('smv').oninput=e=>{$('smvv').textContent=e.target.value+' mV';};
 $('smv').onchange=saveMv;
 $('smvon').onchange=()=>{$('smv').disabled=!$('smvon').checked;saveMv();};
-async function initSet(){dtStat();prStat();prLog();ppStat();trStat();const r=await exec(`cat ${D}/interval 2>/dev/null || echo 5`);$('intv').value=(r.stdout.trim()||'5');const m=await exec(`cat ${D}/shutdown_mv 2>/dev/null || echo 2800`);const mv=parseInt(m.stdout)||0;$('smvon').checked=mv>0;$('smv').disabled=mv<=0;$('smv').value=mv>0?Math.min(3400,Math.max(2700,mv)):2800;$('smvv').textContent=$('smv').value+' mV';}
+async function initSet(){dtStat();prStat();prLog();ppStat();trStat();const r=await exec(`cat ${D}/interval 2>/dev/null || echo 5`);$('intv').value=(r.stdout.trim()||'5');const m=await exec(`cat ${D}/shutdown_mv 2>/dev/null || echo 2800`);const mv=parseInt(m.stdout)||0;const fr=await exec(`sh ${MOD}/lowbat.sh floor`);const vf=Math.min(3400,Math.max(2400,parseInt(fr.stdout)||2700));$('smv').min=vf;$('smvmn').textContent=vf;$('smvsrc').textContent=vf+' mV';$('smvon').checked=mv>0;$('smv').disabled=mv<=0;$('smv').value=mv>0?Math.min(3400,Math.max(vf,mv)):Math.max(vf,2800);$('smvv').textContent=$('smv').value+' mV';}
 
 document.querySelectorAll('.bar button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.bar button').forEach(x=>x.classList.remove('on'));b.classList.add('on');win=+b.dataset.w;stats();draw();});
@@ -857,9 +858,12 @@ let lastCC=null,cwTmax=58;
 function ccShow(j){lastCC=j;if(j.tmax){cwTmax=+j.tmax;$('cwt3').max=cwTmax;$('cwt3n').max=cwTmax;$('cwtmx').textContent=cwTmax+' °C（DTBO）';}if(j.max){ccMax=+j.max;$('ccm').max=ccMax;$('ccmn').max=ccMax;['cwc1','cwc2'].forEach(k=>$(k).max=ccMax);$('ccmx').textContent=ccMax+' mA（DTBO）';}$('ccon').checked=j.en==1;$('ccon').disabled=j.avail!=1;if(!ccEdit){$('ccm').value=j.ma;$('ccmn').value=j.ma;}
   $('ccst').textContent=j.avail!=1?'未找到 wired_chg_curr 节点，本机不支持':j.en!=1?'已关闭（系统温控）':j.pend==1?(j.act!=j.ma?'当前 '+j.act+' mA · '+j.ma+' mA 拔出充电器 3 秒后生效':'新的温控墙设定拔出充电器 3 秒后生效'):j.online!=1?'已开启，插入充电器后生效':('生效中 · '+j.act+' mA'+(+j.fix>0?' · 已补写 '+j.fix+' 次':''));
   if(!cwEdit){$('cwon').checked=j.we==1;$('cwlim').checked=j.lim==1;['t1','c1','t2','c2'].forEach(k=>$('cw'+k).value=j[k]);$('cwt3').value=j.t3;$('cwt3n').value=j.t3;}
-  $('cwbx').style.opacity=$('cwon').checked?1:.5;$('cwlbx').style.opacity=$('cwon').checked&&$('cwlim').checked?1:.5;
+  ccLock();
   $('cwst').textContent=(j.temp!==''?(+j.temp/10).toFixed(1)+'°C':'--')+' / '+(j.stop==1?'⛔ 已断充（≥'+j.t3+'°C）':j.we!=1?'未启用':j.lim!=1?'仅断充 '+j.t3+'°C':j.lvl=='2'?'第二档 '+j.c2+' mA':j.lvl=='1'?'第一档 '+j.c1+' mA':'未触发');
   const c=+j.cur,i=+j.ibat;$('cccur').textContent=(isNaN(c)||j.cur===''?'--':Math.round(c/1000)+' mA')+' / '+(j.online==1&&!isNaN(i)&&j.ibat!==''?Math.round(-i/1000)+' mA':'--');}
+function ccLock(){const base=$('ccon').checked&&lastCC&&lastCC.avail==1,wall=base&&$('cwon').checked,lim=wall&&$('cwlim').checked;
+  ['ccm','ccmn','cwon'].forEach(k=>$(k).disabled=!base);['cwt3','cwt3n','cwlim','cwok'].forEach(k=>$(k).disabled=!wall);['cwt1','cwc1','cwt2','cwc2'].forEach(k=>$(k).disabled=!lim);
+  $('ccmbx').style.opacity=base?1:.45;$('cwbx').style.opacity=wall?1:.45;$('cwlbx').style.opacity=lim?1:.45;$('cwon').parentNode.style.opacity=base?1:.45;}
 async function ccStat(){const r=await exec('sh '+CCS+' status');try{ccShow(JSON.parse(r.stdout.trim().split('\n').pop()));}catch(e){$('ccst').textContent='读取失败';}
   const l=await exec('sh '+CCS+' log');$('cclog').textContent=(l.stdout||'--').trim().split('\n').reverse().slice(0,8).join('\n');}
 function ccV(v){v=Math.round((+v||ccMax)/100)*100;return Math.min(ccMax,Math.max(1000,v));}
@@ -870,7 +874,7 @@ $('ccmn').onfocus=()=>{ccEdit=true;};
 $('ccmn').oninput=e=>{ccEdit=true;const v=+e.target.value;if(v>=1000&&v<=ccMax)$('ccm').value=v;};
 $('ccmn').onblur=()=>{setTimeout(()=>{if(document.activeElement!==$('ccmn'))ccEdit=false;},800);};
 $('ccmn').onchange=e=>{ccEdit=true;const v=ccV(e.target.value);$('ccmn').value=v;$('ccm').value=v;if($('ccon').checked)ccSet();};
-$('ccon').onchange=async()=>{$('ccon').disabled=true;$('ccst').textContent='写入中…';await ccSet();try{ksu.toast($('ccon').checked?'实时充电电流已开启':'已关闭，交还系统温控')}catch(e){}};
+$('ccon').onchange=async()=>{ccLock();$('ccon').disabled=true;$('ccst').textContent='写入中…';await ccSet();try{ksu.toast($('ccon').checked?'实时充电电流已开启':'已关闭，交还系统温控')}catch(e){}};
 ['t1','c1','t2','c2','t3n'].forEach(k=>{$('cw'+k).oninput=$('cw'+k).onfocus=()=>{cwEdit=true;};});
 $('cwt3n').oninput=e=>{cwEdit=true;const v=+e.target.value;if(v>=40&&v<=cwTmax)$('cwt3').value=v;};
 $('cwt3').oninput=e=>{cwEdit=true;$('cwt3n').value=e.target.value;};
@@ -880,8 +884,8 @@ function cwArg(){const t=(id,a,b,d)=>{let v=Math.round(+$(id).value);if(isNaN(v)
 function cwTip(m){let on=false;try{on=$('ccon').checked&&document.getElementById('cccur')&&lastCC&&lastCC.online==1}catch(e){}
   try{ksu.toast(!$('ccon').checked?'已保存，需先打开实时充电电流':on?m+'，拔出充电器 3 秒后生效':m)}catch(e){}}
 async function cwSet(){await exec('sh '+CCS+' wall '+cwArg());cwEdit=false;ccStat();}
-$('cwon').onchange=()=>{cwSet();cwTip($('cwon').checked?'断充温控墙已开启':'断充温控墙已关闭');};
-$('cwlim').onchange=()=>{cwSet();cwTip($('cwlim').checked?'按温度限流已开启':'按温度限流已关闭');};
+$('cwon').onchange=()=>{ccLock();cwSet();cwTip($('cwon').checked?'断充温控墙已开启':'断充温控墙已关闭');};
+$('cwlim').onchange=()=>{ccLock();cwSet();cwTip($('cwlim').checked?'按温度限流已开启':'按温度限流已关闭');};
 $('cwt3').onchange=()=>{cwSet();cwTip('断充温度 '+$('cwt3n').value+'°C 已保存');};
 $('cwok').onclick=()=>{cwSet();cwTip('温控墙已保存');};
 setInterval(()=>{if(page===2)ccStat();},3000);
