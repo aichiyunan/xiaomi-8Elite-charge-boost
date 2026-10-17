@@ -4,7 +4,7 @@
 
 **小米 / 红米 骁龙 8 至尊版系列充电增强模块**
 
-![version](https://img.shields.io/badge/version-v8.5.3-orange)
+![version](https://img.shields.io/badge/version-v8.5.5-orange)
 ![device](https://img.shields.io/badge/device-Xiaomi%2015%20%7C%2015%20Pro%20%7C%20K80%20Pro%20%7C%20K90%20%7C%20K90%20Ultra-blue)
 ![root](https://img.shields.io/badge/root-KernelSU%20%7C%20Magisk-green)
 ![author](https://img.shields.io/badge/author-酷安@鱼楠-red)
@@ -17,11 +17,11 @@
 
 | 文件 | 说明 |
 | --- | --- |
-| [`releases/Mi8Elite-charge-boost_v8.5.3.zip`](releases/Mi8Elite-charge-boost_v8.5.3.zip) | 刷入包，在 KernelSU / Magisk 中安装 |
+| [`releases/Mi8Elite-charge-boost_v8.5.5.zip`](releases/Mi8Elite-charge-boost_v8.5.5.zip) | 刷入包，在 KernelSU / Magisk 中安装 |
 | [`module/`](module/) | 模块完整源码 |
 | [`CHANGELOG.md`](CHANGELOG.md) | 全部版本更新日志（v8.0.7 起，历史刷入包在 `releases/`） |
 
-md5：`2549a1b955a91e789910775a73bf2426`
+md5：`09109eeae153c50d056d63344a400c5d`
 
 ---
 
