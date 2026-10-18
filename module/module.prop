@@ -1,6 +1,6 @@
 id=mi_charge_boost
 name=小米/红米充电加速模块
-version=v8.5.5
-versionCode=855
+version=v8.5.6
+versionCode=856
 author=酷安@鱼楠
 description=致谢：酷安@低线阻狂魔、酷安@花橋桥（PPS 节点）、内置 FreePPS（Seyud / 酷安@瓦力喀，GPL-3.0）
