@@ -2,6 +2,14 @@
 
 所有版本刷入包都在 [`releases/`](releases/) 目录。
 
+## v8.5.6（2026-10-18）
+
+- 机型名识别改为 vendor / odm 优先：移植包把 system 机型名改成「Xiaomi for arm64」等通用值时，也能显示真实机型；都读不到时按机型代号显示
+- 底包显示规则调整：system、vendor、odm 都是 HyperOS / MIUI 时不显示底包，只有识别到移植系统才显示
+- 内置充电监测 App 更新
+
+刷入包：[`releases/Mi8Elite-charge-boost_v8.5.6.zip`](releases/Mi8Elite-charge-boost_v8.5.6.zip)　md5 `d852725c39e3c2e2f02265532878e2d9`
+
 ## v8.5.5（2026-10-17，含 v8.5.4 的改动）
 
 - 低电量延迟关机：设定电压的下限改为 DTBO 内核关机电压（已修改用修改值，未修改用本机原厂值），低于它的设定不再生效；滑块步进改为 10mV
