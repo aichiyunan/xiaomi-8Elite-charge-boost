@@ -19,9 +19,9 @@ status)
 set)
   case " $PWO " in *" $2 "*) [ "$2" != 0 ] && echo $2 > $PF || rm -f $PF;; *) [ "$2" = 0 ] || echo "! ${2}W 不是本机可选档位（可选：${PWO:-无}，原厂 ${PW0}W）"; rm -f $PF;; esac
   set -- $(sh $AP status 2>/dev/null)
-  if [ "$1" = mod ]; then a="${2:--} ${3:--} ${4:--} ${5:--}"; else a="- - - -"; fi
+  if [ "$1" = mod ]; then a="${2:--} ${3:--} ${4:--} ${5:--} ${7:--}"; else a="- - - - -"; fi
   LL=$D/proto_last.log; echo "[$(date '+%m-%d %H:%M:%S')]" > $LL
-  if [ "$(want)" = 0 ] && [ "$a" = "- - - -" ]; then
+  if [ "$(want)" = 0 ] && [ "$a" = "- - - - -" ]; then
     if [ "$1" = mod ]; then sh $AP restore >> $LL 2>&1; r=$?; else echo "- 私有协议已恢复原厂 ${PW0}W" >> $LL; r=0; fi
   else sh $AP $a >> $LL 2>&1; r=$?; fi
   cat $LL
