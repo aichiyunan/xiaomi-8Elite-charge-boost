@@ -1,5 +1,6 @@
 #!/system/bin/sh
-# 用法: apply.sh <电流mA> <关机电压mV> <断充温度°C> [165|-] | restore | status
+# 用法: apply.sh <电流mA> <关机电压mV> <断充温度°C> [165|-] [80|-] | restore | status
+# 第 5 个参数：quick_chg_fv_hys，80=写入 80，-=写回 1（默认，原厂值）；本机 dtbo 没有该属性则跳过
 # 第 4 项 165 = 屏幕超频 165Hz（华星 o3_42 屏添加 132/144/155/165Hz timing，仅小米15 dada）
 # 小米私有协议功率：不走参数，读 /data/adb/mi_charge_boost/proto（机型可选档位见 models.sh PWO，其它=原厂），由 WebUI 开关写入
 # v8.4.9 起多机型：机型参数见 ../models.sh；模板按原厂镜像头部哈希从 stock.list 选（<代号>_<布局>.tpl，dada 仍用 dada.tpl）
@@ -69,7 +70,7 @@ desc(){ # 把 dtbo 状态写进模块描述，模块列表里直接可见
   st=$(sh $H/apply.sh status 2>/dev/null); set -- $st
   bt=$(( $(date +%s) - $(cut -d. -f1 /proc/uptime) )); wt=$(stat -c %Y $D/written$S 2>/dev/null || echo 0)
   case "$1" in
-    mod) v="$(g $2 mA) / $(g $4 °C) / $(g $3 mV)"; [ "$5" = 165 ] && v="$v / 屏幕 165Hz"; [ "${6:--}" != - ] && v="$v / 协议 ${6}W"
+    mod) v="$(g $2 mA) / $(g $4 °C) / $(g $3 mV)"; [ "$5" = 165 ] && v="$v / 屏幕 165Hz"; [ "${6:--}" != - ] && v="$v / 协议 ${6}W"; [ "${7:--}" = 80 ] && v="$v / fv_hys 80"
          if [ "$wt" -gt "$bt" ]; then t="⏳ DTBO 已写入 $v，重启生效"; else t="✅ DTBO 已生效 $v"; fi;;
     stock) if [ "$wt" -gt "$bt" ]; then t="⏳ DTBO 已还原原版，重启生效"; else t="DTBO 原版（未修改）"; fi;;
     changed) t="⚠️ DTBO 已被还原，之前的修改已失效";;
@@ -86,10 +87,10 @@ desc(){ # 把 dtbo 状态写进模块描述，模块列表里直接可见
 case "$1" in
 desc) desc; exit 0;;
 status)
-  [ -f $D/conf ] && read I V T Z P < $D/conf
+  [ -f $D/conf ] && read I V T Z P FH < $D/conf
   if [ -f $D/written$S ]; then read W N < $D/written$S
     if [ "$(sha $BLK $N)" = "$W" ]; then
-      if [ -f $D/conf ] && [ "$(cat $D/state$S 2>/dev/null)" = "mod" ]; then echo "mod $I $V ${T:-58} ${Z:--} ${P:--}"; else echo "stock"; fi; exit 0; fi
+      if [ -f $D/conf ] && [ "$(cat $D/state$S 2>/dev/null)" = "mod" ]; then echo "mod $I $V ${T:-58} ${Z:--} ${P:--} ${FH:--}"; else echo "stock"; fi; exit 0; fi
     rm -f $D/stock.img $D/stock_src $D/written$S $D/state$S; echo "changed $I $V ${T:-58}"; exit 0; fi
   echo "none"; exit 0;;
 restore)
@@ -102,13 +103,14 @@ $(sh $H/../sysinfo.sh)
 EOF
 CODE=$SI_D
 model_info "$CODE" || { echo "! 不支持的机型 $SI_N ($SI_D)，已适配：$(model_names)"; exit 1; }
-I=${1:--}; V=${2:--}; T=${3:--}; Z=${4:--}
+I=${1:--}; V=${2:--}; T=${3:--}; Z=${4:--}; FH=${5:--}
 case "$Z" in 165|-) ;; *) echo "! 屏幕超频参数只能是 165 或 -"; exit 1;; esac
+case "$FH" in 80|-) ;; *) echo "! quick_chg_fv_hys 参数只能是 80 或 -"; exit 1;; esac
 [ "$Z" = 165 ] && [ "$HZ" != 1 ] && { echo "! 屏幕超频 165Hz 只支持小米15（华星 o3_42 屏），$MN 不支持"; exit 1; }
 # 私有协议档位只接受本机可选值（原厂已是 120W 的 K80 Pro 没有可选档）
 [ "$PW" != - ] && case " $PWO " in *" $PW "*) ;; *) echo "- 私有协议 ${PW}W 不适用于 $MN（原厂 ${PW0}W），忽略"; PW=-; rm -f $PF;; esac
 for x in "$I" "$V" "$T"; do case "$x" in -) ;; *[!0-9]*|"") echo "! 参数错误"; exit 1;; esac; done
-[ "$I$V$T$Z$PW" = "-----" ] && { echo "- 都不修改，跳过写入"; exit 0; }
+[ "$I$V$T$Z$PW$FH" = "------" ] && { echo "- 都不修改，跳过写入"; exit 0; }
 echo "- 机型: $SI_N ($SI_D)　系统: $SI_O${SI_B:+（底包 $SI_B）}"
 [ "$I" = - ] || { [ $I -ge 9000 ] && [ $I -le $MX ] || { echo "! 电流范围 9000-$MX mA"; exit 1; }; }
 [ "$V" = - ] || { [ $V -ge 2400 ] && [ $V -le 3400 ] || { echo "! 关机电压范围 2400-3400 mV"; exit 1; }; }
@@ -202,11 +204,20 @@ if [ "$PW" != - ]; then
   if [ $prc = 0 ] && ! grep -q "^missing " $TMP/plog; then mv $TMP/new2.img $TMP/new.img; echo "- 小米私有协议：${PW}W"
   else echo "! 协议功率节点写入失败，分区未改动"; rm -rf $TMP; exit 1; fi
 fi
+# quick_chg_fv_hys：单独一遍，属性存在即覆盖；开关打开写 80，关闭写回 1（各机型原厂均为 1，非原厂底包上也能改回）
+FV=1; [ "$FH" = 80 ] && FV=80
+printf 'mca_strategy_quick_charge\tquick_chg_fv_hys\t00000001\tw\t%s\n' $FV > $TMP/f.tpl; cp $AVB $TMP/f.avb
+DTBO_SET=I=$I,V=$V,T=$T,L=$L $H/dtbopatch $TMP/new.img $TMP/f.tpl $TMP/new3.img -force > $TMP/flog 2>&1; frc=$?
+if [ $frc = 4 ] || grep -q "^missing " $TMP/flog; then [ "$FH" = 80 ] && echo "- 本机 dtbo 没有 quick_chg_fv_hys，跳过"; FH=-
+elif [ $frc = 0 ] && [ -s $TMP/new3.img ]; then mv $TMP/new3.img $TMP/new.img; echo "- quick_chg_fv_hys：$FV"
+elif [ $frc = 2 ]; then echo "- quick_chg_fv_hys：$FV（已是该值）"
+else grep -E "SUMMARY|ERROR" $TMP/flog; echo "! quick_chg_fv_hys 写入失败，分区未改动"; rm -rf $TMP; exit 1; fi
 write $TMP/new.img || { rm -rf $TMP; exit 1; }
-echo "$I $V $T $Z $PW" > $D/conf; echo mod > $D/state$S
+echo "$I $V $T $Z $PW $FH" > $D/conf; echo mod > $D/state$S
 rm -rf $TMP
 f(){ [ "$1" = - ] && echo 不修改 || echo "$1$2"; }
 desc
 zz=不超频; [ "$Z" = 165 ] && zz=165Hz
 pp=原厂${PW0}W; [ "$PW" = - ] || pp=${PW}W
-echo "- 已写入：充电电流 $(f $I mA)，关机电压 $(f $V mV)，断充温度 $(f $T °C)，屏幕 $zz，私有协议 $pp，重启生效"
+fh=1; [ "$FH" = 80 ] && fh=80
+echo "- 已写入：充电电流 $(f $I mA)，关机电压 $(f $V mV)，断充温度 $(f $T °C)，屏幕 $zz，私有协议 $pp，fv_hys $fh，重启生效"
