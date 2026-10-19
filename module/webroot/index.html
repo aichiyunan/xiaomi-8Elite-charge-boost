@@ -240,6 +240,8 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
 <input type="range" id="dzt" min="45" max="58" step="1" value="58"><div class="rg"><span>45</span><span>58 °C</span></div></div>
 <div class="it" id="dzzr"><div class="hd"><span>屏幕超频</span><span id="dzzb" style="display:flex;gap:6px"><button data-z="165" style="padding:4px 12px;font-size:12px;border-radius:999px">165Hz</button><button data-z="-" style="padding:4px 12px;font-size:12px;border-radius:999px">不超频</button></span></div>
 <div style="font-size:11px;color:var(--sub)">华星屏添加 132/144/155/165Hz 档位</div></div>
+<div class="it" id="dzfr"><div class="hd"><span>修改 quick_chg_fv_hys</span><label class="tsw"><input type="checkbox" id="dzfh"><i></i></label></div>
+<div style="font-size:11px;color:var(--sub)">打开写入 80；关闭写回原厂 1（默认）。本机 dtbo 没有该属性时跳过</div></div>
 <div style="font-size:11px;color:var(--sub);padding:8px 0 0">设定温度以下满速，超过即停充。写入 dtbo 并重算 AVB，重启后生效；原版自动备份。</div>
 <div class="bt"><button class="w" id="dzok">写入（重启生效）</button><button class="w red" id="dzrst">还原原版</button></div>
 <pre id="dzlog" style="font-size:11px;white-space:pre-wrap;margin:8px 0 0;color:var(--sub)" hidden></pre>
@@ -288,6 +290,13 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
 <details class="pplg"><summary>运行记录</summary><pre id="pplog" style="font-size:11px;white-space:pre-wrap;margin:4px 0 0;color:var(--sub);max-height:120px;overflow:auto">--</pre></details>
 </div>
 <div style="font-size:12px;color:var(--sub);margin:14px 4px 6px">实验性功能 · 免重启，效果因机型和系统版本而异，异常时请关闭</div>
+<div class="card" id="qrc">
+<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">快充断流秒恢复<span style="font-size:10px;font-weight:600;color:#f59e0b;border:1px solid #f59e0b;border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:2px">实验性</span></b><label class="tsw"><input type="checkbox" id="qron"><i></i></label></div>
+<div style="font-size:11px;color:var(--sub);margin-top:6px">仅小米15。快充停止后约 0.5 秒让原厂驱动重新判断进快充，不用等约 10 秒的轮询；不改电流、电压和任何保护，原厂判断不满足时不会进快充。10 分钟最多 6 次。关闭后需重启才彻底移除。</div>
+<div class="row" style="margin-top:6px"><span>状态</span><span id="qrst">读取中…</span></div>
+<div class="row"><span>停充 / 已恢复</span><span id="qrcnt">--</span></div>
+<details class="pplg"><summary>运行记录</summary><pre id="qrlog" style="font-size:11px;white-space:pre-wrap;margin:4px 0 0;color:var(--sub);max-height:120px;overflow:auto">--</pre></details>
+</div>
 <div class="card" id="trc">
 <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">解除温控降速<span style="font-size:10px;font-weight:600;color:#f59e0b;border:1px solid #f59e0b;border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:2px">实验性</span></b><label class="tsw"><input type="checkbox" id="tron"><i></i></label></div>
 <div style="font-size:11px;color:var(--sub);margin-top:6px">实时生效，无需重启。去掉系统温控对快充电流的限制，发热时不再降速；电流上限与断充温度仍按上方 DTBO 设定。</div>
@@ -782,7 +791,7 @@ const saveMv=()=>exec(`echo ${$('smvon').checked?$('smv').value:0} > ${D}/shutdo
 $('smv').oninput=e=>{$('smvv').textContent=e.target.value+' mV';};
 $('smv').onchange=saveMv;
 $('smvon').onchange=()=>{$('smv').disabled=!$('smvon').checked;saveMv();};
-async function initSet(){dtStat();prStat();prLog();ppStat();trStat();const r=await exec(`cat ${D}/interval 2>/dev/null || echo 5`);$('intv').value=(r.stdout.trim()||'5');const m=await exec(`cat ${D}/shutdown_mv 2>/dev/null || echo 2800`);const mv=parseInt(m.stdout)||0;const fr=await exec(`sh ${MOD}/lowbat.sh floor`);const vf=Math.min(3400,Math.max(2400,parseInt(fr.stdout)||2700));$('smv').min=vf;$('smvmn').textContent=vf;$('smvsrc').textContent=vf+' mV';$('smvon').checked=mv>0;$('smv').disabled=mv<=0;$('smv').value=mv>0?Math.min(3400,Math.max(vf,mv)):Math.max(vf,2800);$('smvv').textContent=$('smv').value+' mV';}
+async function initSet(){dtStat();prStat();prLog();ppStat();trStat();qrStat();const r=await exec(`cat ${D}/interval 2>/dev/null || echo 5`);$('intv').value=(r.stdout.trim()||'5');const m=await exec(`cat ${D}/shutdown_mv 2>/dev/null || echo 2800`);const mv=parseInt(m.stdout)||0;const fr=await exec(`sh ${MOD}/lowbat.sh floor`);const vf=Math.min(3400,Math.max(2400,parseInt(fr.stdout)||2700));$('smv').min=vf;$('smvmn').textContent=vf;$('smvsrc').textContent=vf+' mV';$('smvon').checked=mv>0;$('smv').disabled=mv<=0;$('smv').value=mv>0?Math.min(3400,Math.max(vf,mv)):Math.max(vf,2800);$('smvv').textContent=$('smv').value+' mV';}
 
 document.querySelectorAll('.bar button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.bar button').forEach(x=>x.classList.remove('on'));b.classList.add('on');win=+b.dataset.w;stats();draw();});
@@ -795,7 +804,7 @@ function go(p){
   $('track').style.transform=`translate3d(${-p*25}%,0,0)`;
   $('ind').style.transform=`translate3d(${p*100}%,0,0)`;
   if(p===1){stats();draw();}
-  if(p===2){trStat();ppStat();ccStat();}
+  if(p===2){trStat();qrStat();ppStat();ccStat();}
   if(p===1&&!recsLoaded)setTimeout(loadRecs,320);
   if(p===3)setTimeout(hzEnter,320);
 }
@@ -806,6 +815,14 @@ $('thm').onclick=()=>{applyTheme(document.documentElement.dataset.theme==='light
 navBtns.forEach(b=>b.addEventListener('pointerdown',()=>go(+b.dataset.p)));
 (async()=>{await info();await mdlLoad();await exec(`[ -f ${D}/ps.cache ] && [ -f ${D}/detail.list ] || sh ${MOD}/detect.sh`);initSet();tick();loadRecs();setInterval(tick,1000);requestAnimationFrame(loop);})();
 
+const QR=MOD+'/qr/qr.sh';
+function qrShow(j){$('qron').checked=j.want==1;$('qron').disabled=j.avail!=1;
+  $('qrst').textContent=j.avail!=1?'本机不支持（仅小米15）':j.want!=1?(j.loaded==1?'已关闭（重启后移除）':'已关闭'):j.loaded!=1?'未加载':j.mismatch>0&&j.replays==0?'已加载 · 自检未通过，不会触发':'已开启';
+  $('qrcnt').textContent=j.loaded==1?(j.stops+' / '+j.replays+(j.skipped>0?'（限次跳过 '+j.skipped+'）':'')):'--';}
+async function qrStat(){const r=await exec('sh '+QR+' status');try{qrShow(JSON.parse(r.stdout.trim().split('\n').pop()));}catch(e){$('qrst').textContent='读取失败';}
+  const l=await exec('sh '+QR+' log');$('qrlog').textContent=(l.stdout||'--').trim().split('\n').reverse().slice(0,8).join('\n');}
+$('qron').onchange=async()=>{const v=$('qron').checked?1:0;$('qron').disabled=true;$('qrst').textContent='写入中…';
+  await exec('sh '+QR+' set '+v);await qrStat();};
 const TR=MOD+'/tr/tr.sh';
 function trShow(j){$('tron').checked=j.want==1;$('tron').disabled=j.avail!=1;
   $('trst').textContent=j.avail!=1?'未找到 MCA 节点，本机不支持':(j.want==1?(j.online==1?(j.cur=='1'?'已解除（充电中）':'待生效'):'已开启，插入充电器后生效'):'已关闭（系统温控）');
@@ -897,16 +914,17 @@ function dzSet(id,v){const r=$(id),mn=+r.min,mx=+r.max;v=Math.round(+v);if(isNaN
 DZ.forEach(([id])=>{$(id).oninput=e=>{$(id+'n').value=e.target.value;};$(id+'n').onchange=e=>dzSet(id,e.target.value);});
 let DZZ='-';function dzZ(z){DZZ=z==='165'?'165':'-';document.querySelectorAll('#dzzb button').forEach(b=>{const on=b.dataset.z===DZZ;b.style.background=on?'#2b5cff':'';b.style.color=on?'#fff':'';});}
 document.querySelectorAll('#dzzb button').forEach(b=>b.onclick=()=>dzZ(b.dataset.z));dzZ('-');
+const dzFH=()=>$('dzfh').checked?'80':'-';
 async function dtStat(){const r=await exec('sh '+DT+' status');const a=r.stdout.trim().split(' ').map(x=>x==='-'?'原厂':x);
-  const raw=r.stdout.trim().split(' ');if(raw[0]==='mod')dzZ(raw[4]||'-');
-  T('dzst',a[0]==='mod'?'✅ 已应用 '+a[1]+'mA / '+a[2]+'mV / '+(a[3]||58)+'°C'+(raw[4]==='165'?' / 165Hz':'')+(raw[5]&&raw[5]!=='-'?' / 协议 '+raw[5]+'W':''):a[0]==='stock'?'原版':a[0]==='changed'?'⚠️ dtbo 已还原，请重新写入':'未修改');
+  const raw=r.stdout.trim().split(' ');if(raw[0]==='mod'){dzZ(raw[4]||'-');$('dzfh').checked=raw[6]==='80';}
+  T('dzst',a[0]==='mod'?'✅ 已应用 '+a[1]+'mA / '+a[2]+'mV / '+(a[3]||58)+'°C'+(raw[4]==='165'?' / 165Hz':'')+(raw[5]&&raw[5]!=='-'?' / 协议 '+raw[5]+'W':'')+(raw[6]==='80'?' / fv_hys 80':''):a[0]==='stock'?'原版':a[0]==='changed'?'⚠️ dtbo 已还原，请重新写入':'未修改');
   if(a[0]==='mod'||a[0]==='changed'){$('dzi').dataset.set=1;dzSet('dzi',a[1]);dzSet('dzv',a[2]);dzSet('dzt',a[3]||58);}}
 async function dtRun(arg,btn){btn.disabled=true;$('dzlog').hidden=false;$('dzlog').textContent='正在处理，约 5 秒…';
   let r=await exec('sh '+DT+' '+arg+' 2>&1');let o=(r.stdout||'')+(r.stderr||'');$('dzlog').textContent=o;
   if(o.includes('原厂镜像校验未通过')&&confirm('原厂镜像校验未通过：当前 dtbo 不是已收录的原厂镜像（官改包可能有小改动）。\n\n是否备份当前 dtbo，并以当前镜像为底修改刷入？\n（不逐项比对原厂值，可随时写回备份）')){
     $('dzlog').textContent='以当前镜像为底写入中…';r=await exec('DTBO_CUR=1 sh '+DT+' '+arg+' 2>&1');$('dzlog').textContent=(r.stdout||'')+(r.stderr||'');}
   btn.disabled=false;dtStat();}
-$('dzok').onclick=()=>{const i=dzSet('dzi',$('dzin').value),v=dzSet('dzv',$('dzvn').value),t=dzSet('dzt',$('dztn').value);if(confirm('写入 dtbo：快充 '+i+' mA、关机电压 '+v+' mV、断充 '+t+'°C'+(MDL.hz==1?'、屏幕'+(DZZ==='165'?'超频 165Hz':'不超频'):'')+'？\n写入后需重启生效'))dtRun(i+' '+v+' '+t+' '+DZZ,$('dzok'));};
+$('dzok').onclick=()=>{const i=dzSet('dzi',$('dzin').value),v=dzSet('dzv',$('dzvn').value),t=dzSet('dzt',$('dztn').value);if(confirm('写入 dtbo：快充 '+i+' mA、关机电压 '+v+' mV、断充 '+t+'°C'+(MDL.hz==1?'、屏幕'+(DZZ==='165'?'超频 165Hz':'不超频'):'')+'、quick_chg_fv_hys '+(dzFH()==='80'?'80':'1（原厂）')+'？\n写入后需重启生效'))dtRun(i+' '+v+' '+t+' '+DZZ+' '+dzFH(),$('dzok'));};
 const PR=MOD+'/proto/proto.sh';let prBusy=false;
 async function prLog(){const r=await exec('sh '+PR+' log 2>&1');const t=((r.stdout||'')+(r.stderr||'')).trim();$('prlog').textContent=t||'暂无记录';}
 async function prStat(){if(prBusy)return;const r=await exec('sh '+PR+' status');try{const j=JSON.parse(r.stdout.trim().split('\n').pop());
