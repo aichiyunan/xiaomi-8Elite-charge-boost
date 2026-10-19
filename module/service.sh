@@ -22,5 +22,7 @@ rm -f $D/soft $D/soft_on $D/soft_stop $D/soft_src $D/soft_unit $D/soft_fakeok $D
 chmod 0755 $MODDIR/pps/FreePPS 2>/dev/null
 nohup sh $MODDIR/pps/daemon.sh >/dev/null 2>&1 &
 nohup sh $MODDIR/hs/daemon.sh >/dev/null 2>&1 &
+# 快充断流秒恢复（mi_qc_retry.ko，开关默认关闭；开机 60 秒后按配置加载）
+(sleep 60; sh $MODDIR/qr/qr.sh boot) &
 # 实时充电电流守护
 nohup sh $MODDIR/cc/daemon.sh >/dev/null 2>&1 &
