@@ -2,6 +2,14 @@
 
 所有版本刷入包都在 [`releases/`](releases/) 目录。
 
+## v8.5.8（2026-10-19，含 v8.5.7 的改动）
+
+- 新增「快充断流秒恢复」（仅小米15，默认关闭）：内置 mi_qc_retry.ko，快充停止后约 0.5 秒让原厂驱动重新判断进快充，不改电流、电压和保护阈值；WebUI 可看停充 / 已恢复次数和运行记录
+- DTBO 修改新增 quick_chg_fv_hys 开关：打开写入 80，关闭写回原厂 1（默认）；本机 dtbo 没有该属性时跳过。小米15 模板不再默认写 80
+- 私有协议开关、状态显示同步支持 fv_hys
+
+刷入包：[`releases/Mi8Elite-charge-boost_v8.5.8.zip`](releases/Mi8Elite-charge-boost_v8.5.8.zip)　md5 `b9761c2d2fe5e3a74b8154eada45ac8c`
+
 ## v8.5.6（2026-10-18）
 
 - 机型名识别改为 vendor / odm 优先：移植包把 system 机型名改成「Xiaomi for arm64」等通用值时，也能显示真实机型；都读不到时按机型代号显示
