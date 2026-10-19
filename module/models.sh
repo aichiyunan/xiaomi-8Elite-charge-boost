@@ -15,6 +15,14 @@ model_info(){
   esac
   MODNAME="${MN}充电加速模块"; return 0
 }
+# 通用加载（v8.5.9）：已适配机型用表内参数；未适配机型只识别型号、不拦截，按通用参数运行
+# GEN=1 表示未适配机型：电流上限 20500、无私有协议档位、无屏幕超频，FFC 截止电压等一律保持本机原厂（dtbo 逐项比对，只写原厂值吻合的项）
+model_load(){
+  if model_info "$1"; then GEN=0; return 0; fi
+  GEN=1; MN=$(sh ${MCB_ROOT:-${0%/*}}/sysinfo.sh 2>/dev/null | sed -n 1p); [ -n "$MN" ] || MN=$(getprop ro.product.marketname); [ -n "$MN" ] || MN=小米
+  MI=15500; MX=20500; SC=20000; VQ=0; V0=3000; PW0=0; PWO=""; HZ=0; DEFT=""
+  MODNAME="${MN}充电加速模块"; return 0
+}
 model_names(){ echo "小米15 / 小米15 Pro / 红米K80 Pro / 红米K90 / 红米K90至尊版"; }
 # 识别机型代号：sysinfo.sh（移植系统优先读 vendor/odm）→ 其它属性 → 分区 build.prop
 detect_code(){
