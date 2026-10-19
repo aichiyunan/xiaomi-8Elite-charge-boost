@@ -4,7 +4,7 @@
 
 **小米 / 红米 骁龙 8 至尊版系列充电增强模块**
 
-![version](https://img.shields.io/badge/version-v8.5.6-orange)
+![version](https://img.shields.io/badge/version-v8.5.9-orange)
 ![device](https://img.shields.io/badge/device-Xiaomi%2015%20%7C%2015%20Pro%20%7C%20K80%20Pro%20%7C%20K90%20%7C%20K90%20Ultra-blue)
 ![root](https://img.shields.io/badge/root-KernelSU%20%7C%20Magisk-green)
 ![author](https://img.shields.io/badge/author-酷安@鱼楠-red)
@@ -17,11 +17,11 @@
 
 | 文件 | 说明 |
 | --- | --- |
-| [`releases/Mi8Elite-charge-boost_v8.5.6.zip`](releases/Mi8Elite-charge-boost_v8.5.6.zip) | 刷入包，在 KernelSU / Magisk 中安装 |
+| [`releases/Micharge-boost_v8.5.9.zip`](releases/Micharge-boost_v8.5.9.zip) | 刷入包，在 KernelSU / Magisk 中安装 |
 | [`module/`](module/) | 模块完整源码 |
 | [`CHANGELOG.md`](CHANGELOG.md) | 全部版本更新日志（v8.0.7 起，历史刷入包在 `releases/`） |
 
-md5：`d852725c39e3c2e2f02265532878e2d9`
+md5：`f52d523f04470d55c98f8dd88e751357`
 
 ---
 
@@ -66,7 +66,7 @@ md5：`d852725c39e3c2e2f02265532878e2d9`
 
 | 项目 | 支持 |
 | --- | --- |
-| 机型 | 小米15（dada）、小米15 Pro（haotian）、红米K80 Pro（miro）、红米K90（annibale）、红米K90至尊版（warsaw），其他机型安装时自动拒绝 |
+| 机型 | 小米15（dada）、小米15 Pro（haotian）、红米K80 Pro（miro）、红米K90（annibale）、红米K90至尊版（warsaw）已适配；其他机型按通用模式安装，dtbo 逐项比对原厂值，只写吻合的项 |
 | 系统（小米15） | HyperOS OS4.0.0.6 / 7 / 8 / 16 / 19，OS3.0.2 / 301 / 302 / 303 / 305 / 307 |
 | 移植包 | ColorOS 16.1 移植包（自动识别官改 dtbo） |
 | Root | KernelSU / Magisk |
