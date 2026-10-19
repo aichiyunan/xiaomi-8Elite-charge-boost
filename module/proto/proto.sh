@@ -5,7 +5,7 @@
 D=/data/adb/mi_charge_boost; mkdir -p $D
 PF=${PROTO_F:-$D/proto}; LOG=$D/proto.log
 AP=${0%/*}/../dtbo/apply.sh
-MCB_ROOT=$(cd ${0%/*}/.. && pwd); . $MCB_ROOT/models.sh; model_info "$(model_code)" || { PW0=90; PWO="100 120"; }
+MCB_ROOT=$(cd ${0%/*}/.. && pwd); . $MCB_ROOT/models.sh; model_load "$(model_code)" || { PW0=90; PWO="100 120"; }
 log(){ echo "$(date '+%m-%d %H:%M:%S') $*" >> $LOG; [ $(wc -l < $LOG) -gt 100 ] && sed -i '1,50d' $LOG; }
 want(){ w=$(cat $PF 2>/dev/null); case " $PWO " in *" $w "*) [ -n "$w" ] && echo $w || echo 0;; *) echo 0;; esac; }
 case "$1" in
