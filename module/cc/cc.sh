@@ -5,7 +5,7 @@ D=/data/adb/mi_charge_boost; mkdir -p $D
 CONF=$D/cc; LOG=$D/cc.log
 MIN=1000; REL=22000
 # 上限跟随 DTBO 已写入的快充电流（未修改/已还原按本机原厂值，小米15 15500）
-MCB_ROOT=$(cd ${0%/*}/.. && pwd); . $MCB_ROOT/models.sh 2>/dev/null; model_info "$(model_code)" >/dev/null 2>&1 || MI=15500
+MCB_ROOT=$(cd ${0%/*}/.. && pwd); . $MCB_ROOT/models.sh 2>/dev/null; model_load "$(model_code)" >/dev/null 2>&1 || MI=15500
 dmax(){ S=$(getprop ro.boot.slot_suffix 2>/dev/null); x=/data/adb/mi_charge_boost/dtbo; [ -f /data/adb/.mcb_dtbo/stock.img ] && x=/data/adb/.mcb_dtbo
   i=""; [ "$(cat $x/state$S 2>/dev/null)" = mod ] && [ -f $x/conf ] && read i _r < $x/conf
   case "$i" in ''|-|*[!0-9]*) i=${MI:-15500};; esac; [ $i -gt $REL ] && i=$REL; [ $i -lt $MIN ] && i=$MIN; echo $i; }
