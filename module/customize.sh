@@ -1,16 +1,10 @@
 SKIPUNZIP=0
-# 机型校验（刷入第一步，其它任何安装动作之前）：只允许已适配机型
-# 小米15 dada / 小米15 Pro haotian / 红米K80 Pro miro / 红米K90 annibale / 红米K90至尊版 warsaw
+# 机型识别（v8.5.9 起不做机型校验，只识别型号）：已适配机型用表内参数，其它机型按通用参数安装
 # 移植系统 product 属性可能被改，优先认 vendor/odm 底包属性和 /vendor/build.prop（sysinfo.sh 同逻辑）
 MCB_ROOT=$MODPATH; . $MODPATH/models.sh
 CODE=$(detect_code)
-if ! model_info "$CODE"; then
-  ui_print "********************"
-  ui_print " ! 机型不符：本模块只适用于 $(model_names)"
-  ui_print " ! 当前设备：$(getprop ro.product.marketname) $(getprop ro.product.vendor.device)（代号 $CODE）"
-  ui_print "********************"
-  abort " ! 已取消安装，未做任何修改"
-fi
+case "$CODE" in ""|unknown) CODE=$(getprop ro.product.vendor.device); CODE=${CODE:-$(getprop ro.product.device)}; CODE=${CODE:-unknown};; esac
+model_load "$CODE"
 # 按机型写模块名与机型代号（运行时脚本、WebUI 读 $MODPATH/model）
 echo $CODE > $MODPATH/model
 sed -i "s|^name=.*|name=$MODNAME|" $MODPATH/module.prop
@@ -128,9 +122,13 @@ out "- 设备: $SI_N ($SI_D)　系统: $SI_O${SI_B:+（底包 $SI_B）}"
 out "- 音量+ 切换　音量- 确认　15 秒不操作选默认"
 IS_DADA=0; [ "$CODE" = dada ] && IS_DADA=1
 [ "$SI_D" = "$CODE" ] || out "- 机型代号按底包属性识别为 $CODE（$MN）"
+[ "$GEN" = 1 ] && out "- 非已适配机型（$(model_names) 之外）：通用安装，dtbo 逐项比对原厂值，只写吻合的项，FFC 截止电压保持本机原厂"
 DI=-; DT=-; DV=-; DZ=-
 fa(){ echo "$(($1/1000)).$(($1%1000/100))A" | sed 's/\.0A$/A/'; }
-if [ $IS_DADA = 1 ]; then
+if [ "$GEN" = 1 ]; then
+  menu 1 "dtbo 快充电流" "只改与已适配机型原厂值逐项吻合的满速温区，其余保持本机原厂" "修改为 $(fa $MI)" "修改为 $(fa $MX)（模块上限）" "不修改电流"
+  case $SEL in 1) DI=$MI;; 2) DI=$MX;; esac
+elif [ $IS_DADA = 1 ]; then
   menu 1 "dtbo 快充电流" "修改后全温段以该电流满速" "修改为 15.5A" "修改为 20.5A（90W 理论极限）" "不修改电流"
   case $SEL in 1) DI=15500;; 2) DI=20500;; esac
 else
@@ -142,7 +140,8 @@ menu 2 "dtbo 满速/断充温度" "设定温度以下满速，超过停充" "修
 [ $SEL = 1 ] && DT=55
 # 关机电压选项按原厂值往下给两档（小米15/15 Pro/K80 Pro 原厂 3050，K90/K90至尊版 原厂 2850）
 if [ $V0 -ge 3000 ]; then VA=2900; VB=3000; else VA=2700; VB=2800; fi
-menu 3 "dtbo 内核关机电压" "电池电压降到该值才关机（原厂 ${V0}mV）" "修改为 ${VA}mV" "修改为 ${VB}mV" "不修改关机电压"
+V0T="原厂 ${V0}mV"; [ "$GEN" = 1 ] && V0T="原厂值以本机为准"
+menu 3 "dtbo 内核关机电压" "电池电压降到该值才关机（$V0T）" "修改为 ${VA}mV" "修改为 ${VB}mV" "不修改关机电压"
 case $SEL in 1) DV=$VA;; 2) DV=$VB;; esac
 if [ "$HZ" = 1 ]; then
   menu 4 "屏幕超频" "华星屏添加 132/144/155/165Hz 刷新率档位" "屏幕超频 165Hz" "不超频屏幕"
@@ -162,12 +161,6 @@ DR=0; DO=$D/dtbo.out; true > $DO 2>/dev/null || { DO=/dev/mcb_dtbo.out; true > $
 if [ "$DI$DT$DV$DZ" != "----" ]; then
   chmod 755 $MODPATH/dtbo/dtbopatch
   sh $MODPATH/dtbo/apply.sh $DI $DV $DT $DZ > $DO 2>&1; DR=$?
-  if [ $DR = 5 ]; then
-    grep -v "^! " $DO | while read -r l; do out "$l"; done
-    menu $((S4+3)) "原厂镜像校验未通过" "当前 dtbo 不是已收录的原厂镜像（官改包可能有小改动）。可备份当前 dtbo 并以它为底修改刷入，不逐项比对原厂值" "不刷入 dtbo" "以当前镜像修改刷入"
-    if [ $SEL = 2 ]; then DTBO_CUR=1 sh $MODPATH/dtbo/apply.sh $DI $DV $DT $DZ > $DO 2>&1; DR=$?
-    else echo "! 原厂镜像校验未通过，已选择不刷入" >> $DO; fi
-  fi
   grep -q "^! " $DO && DR=1
 fi
 ui_print " "
