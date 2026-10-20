@@ -2,6 +2,24 @@
 
 所有版本刷入包都在 [`releases/`](releases/) 目录。
 
+## v8.6.0（2026-10-20）
+
+本版起分两个刷入包，功能相同，区别只在机型适配：
+
+| 刷入包 | 适用 | 区别 |
+| --- | --- | --- |
+| `Mi8Elite-charge-boost_v8.6.0.zip` | 小米15、小米15 Pro、红米K80 Pro、红米K90、红米K90至尊版 | 机型专版：刷入先校验机型，其它机型直接拒绝；dtbo 按收录的原厂镜像整包校验，官改/未收录镜像可选「以当前镜像修改刷入」 |
+| `Micharge-boost_v8.6.0.zip` | 上面五款 + 其它带原厂 MCA 快充的小米/红米机型 | 通用版：不校验机型，五款已适配机型照常用表内参数；其它机型通用安装，dtbo 逐项比对原厂值只写吻合的项，FFC 截止电压保持本机原厂 |
+
+五款已适配机型两个包都能刷，想要严格校验选 Mi8Elite，其它机型只能刷 Micharge。
+
+更新内容（两包共有）：
+- 「快充断流秒恢复」不再限小米15，所有带原厂 MCA 快充驱动（mca_strategy_quickchg）的机型都能开；挂载点自检不过就不触发
+- WebUI 对应提示和「本机不支持」判断同步修改
+
+- [`releases/Mi8Elite-charge-boost_v8.6.0.zip`](releases/Mi8Elite-charge-boost_v8.6.0.zip)　md5 `bc56a481cb696bd0746c8c4043f07a69`
+- [`releases/Micharge-boost_v8.6.0.zip`](releases/Micharge-boost_v8.6.0.zip)　md5 `177c294f1913891a2b113d5560cad4c0`
+
 ## v8.5.9（2026-10-20）
 
 - 取消机型校验：已适配机型照常用表内参数，其它机型按通用模式安装
