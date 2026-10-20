@@ -292,7 +292,7 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
 <div style="font-size:12px;color:var(--sub);margin:14px 4px 6px">实验性功能 · 免重启，效果因机型和系统版本而异，异常时请关闭</div>
 <div class="card" id="qrc">
 <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">快充断流秒恢复<span style="font-size:10px;font-weight:600;color:#f59e0b;border:1px solid #f59e0b;border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:2px">实验性</span></b><label class="tsw"><input type="checkbox" id="qron"><i></i></label></div>
-<div style="font-size:11px;color:var(--sub);margin-top:6px">仅小米15。快充停止后约 0.5 秒让原厂驱动重新判断进快充，不用等约 10 秒的轮询；不改电流、电压和任何保护，原厂判断不满足时不会进快充。10 分钟最多 6 次。关闭后需重启才彻底移除。</div>
+<div style="font-size:11px;color:var(--sub);margin-top:6px">需原厂 MCA 快充驱动（小米/红米 MCA 机型通用）。快充停止后约 0.5 秒让原厂驱动重新判断进快充，不用等约 10 秒的轮询；不改电流、电压和任何保护，原厂判断不满足时不会进快充。10 分钟最多 6 次。关闭后需重启才彻底移除。</div>
 <div class="row" style="margin-top:6px"><span>状态</span><span id="qrst">读取中…</span></div>
 <div class="row"><span>停充 / 已恢复</span><span id="qrcnt">--</span></div>
 <details class="pplg"><summary>运行记录</summary><pre id="qrlog" style="font-size:11px;white-space:pre-wrap;margin:4px 0 0;color:var(--sub);max-height:120px;overflow:auto">--</pre></details>
@@ -817,7 +817,7 @@ navBtns.forEach(b=>b.addEventListener('pointerdown',()=>go(+b.dataset.p)));
 
 const QR=MOD+'/qr/qr.sh';
 function qrShow(j){$('qron').checked=j.want==1;$('qron').disabled=j.avail!=1;
-  $('qrst').textContent=j.avail!=1?'本机不支持（仅小米15）':j.want!=1?(j.loaded==1?'已关闭（重启后移除）':'已关闭'):j.loaded!=1?'未加载':j.mismatch>0&&j.replays==0?'已加载 · 自检未通过，不会触发':'已开启';
+  $('qrst').textContent=j.avail!=1?'本机不支持（无原厂 MCA 快充）':j.want!=1?(j.loaded==1?'已关闭（重启后移除）':'已关闭'):j.loaded!=1?'未加载':j.mismatch>0&&j.replays==0?'已加载 · 自检未通过，不会触发':'已开启';
   $('qrcnt').textContent=j.loaded==1?(j.stops+' / '+j.replays+(j.skipped>0?'（限次跳过 '+j.skipped+'）':'')):'--';}
 async function qrStat(){const r=await exec('sh '+QR+' status');try{qrShow(JSON.parse(r.stdout.trim().split('\n').pop()));}catch(e){$('qrst').textContent='读取失败';}
   const l=await exec('sh '+QR+' log');$('qrlog').textContent=(l.stdout||'--').trim().split('\n').reverse().slice(0,8).join('\n');}
