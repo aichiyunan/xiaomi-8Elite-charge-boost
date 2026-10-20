@@ -1,17 +1,17 @@
 #!/system/bin/sh
 # 快充断流秒恢复：内置 mi_qc_retry.ko（kprobe 挂 mca_quick_charge_stop_charging，
 # 停充后约 0.5 秒重放原厂事件 68，让原厂驱动自己重新判断进快充；不改电流/电压/保护阈值）
-# 只支持小米15（dada）。ko 没有卸载函数：关闭 = enable=0，彻底移除需重启。
+# 所有带原厂 MCA 快充模块（mca_strategy_quickchg）的机型可用；挂载点自检不过就不触发。ko 没有卸载函数：关闭 = enable=0，彻底移除需重启。
 QD=${0%/*}; MD=${QD%/qr}
 D=/data/adb/mi_charge_boost; mkdir -p $D
 CONF=$D/qc_retry; LOG=$D/qr.log; P=/sys/module/mi_qc_retry/parameters
 log(){ echo "$(date '+%m-%d %H:%M:%S') $*" >> $LOG; [ $(wc -l < $LOG) -gt 200 ] && sed -i '1,100d' $LOG; }
 want(){ [ "$(cat $CONF 2>/dev/null)" = 1 ] && echo 1 || echo 0; }
-avail(){ [ "$(cat $MD/model 2>/dev/null)" = dada ] && [ -d /sys/module/mca_strategy_quickchg ] && echo 1 || echo 0; }
+avail(){ [ -d /sys/module/mca_strategy_quickchg ] && echo 1 || echo 0; }
 pv(){ cat $P/$1 2>/dev/null || echo 0; }
 load(){ # 未加载时 insmod；.loading 防死机循环（90 秒内没活下来，下次开机自动关闭开关）
   [ -d /sys/module/mi_qc_retry ] && return 0
-  [ "$(avail)" = 1 ] || { log "本机不支持（仅小米15，且需原厂快充模块已加载）"; return 1; }
+  [ "$(avail)" = 1 ] || { log "本机不支持（未检测到原厂 MCA 快充模块）"; return 1; }
   echo 1 > $D/qr.loading; sync
   if insmod $QD/mi_qc_retry.ko enable=1 retry_ms=500 max_burst=6 2>>$LOG; then
     log "加载成功：$(dmesg | grep 'mi_qc_retry: armed' | tail -1 | sed 's/.*mi_qc_retry: //')"
