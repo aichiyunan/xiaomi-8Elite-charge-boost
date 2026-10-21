@@ -2,6 +2,17 @@
 
 所有版本刷入包都在 [`releases/`](releases/) 目录。
 
+## v8.6.2（2026-10-21）
+
+两个刷入包改动相同，刷入区分沿用 v8.6.0：Mi8Elite 为五款机型专版（刷入校验机型），Micharge 为通用版（不校验机型，dtbo 逐项比对）。
+
+- 关闭循环降压：DTBO 修改时把 drop_fv_cycle 三处（快充 mca_strategy_quick_charge、buck 充电 mca_strategy_buckchg_class、电量计 strategy-fg）改为 0，所有机型都改；OS3 原厂为 301（循环 301 次后降截止电压），OS4 原厂已是 0
+- 关闭循环降流：drop_fcc_para 的循环门槛全部改为 65535（永不触发），降流值不动。已收录三种原厂布局：小米15 系列 400/800/65535 三档、红米K90 300/400/800/65535 四档、红米K90至尊版 300/800/65535 三档；其它布局保持本机原样
+- 节点不存在时自动跳过；卸载模块还原原厂 dtbo 即恢复
+
+- [`releases/Mi8Elite-charge-boost_v8.6.2.zip`](releases/Mi8Elite-charge-boost_v8.6.2.zip)　md5 `1e96a7db2a847c7559ef71150ddbd002`
+- [`releases/Micharge-boost_v8.6.2.zip`](releases/Micharge-boost_v8.6.2.zip)　md5 `1758a13a991cda717c1d5e2bbcada7ec`
+
 ## v8.6.1（2026-10-21）
 
 两个刷入包改动相同，刷入区分沿用 v8.6.0：Mi8Elite 为五款机型专版（刷入校验机型），Micharge 为通用版（不校验机型，dtbo 逐项比对）。
