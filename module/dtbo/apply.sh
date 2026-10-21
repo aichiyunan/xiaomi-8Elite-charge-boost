@@ -258,6 +258,31 @@ elif [ $frc = 0 ] && [ -s $TMP/new3.img ]; then mv $TMP/new3.img $TMP/new.img; e
 elif [ $frc = 2 ]; then echo "- quick_chg_fv_hys：$FV（已是该值）"
 else grep -E "SUMMARY|ERROR" $TMP/flog; echo "! quick_chg_fv_hys 写入失败，分区未改动"; rm -rf $TMP; exit 1; fi
 fi
+# 循环降压（v8.6.2）：drop_fv_cycle 三处写 0（属性存在即覆盖；OS3 原厂 301，OS4 原厂即为 0）；
+# drop_fcc_para 循环门槛全部改 65535、降流值不动（只认已收录的原厂布局，其它布局保持本机原样）
+printf '?mca_strategy_buckchg_class\tdrop_fv_cycle\t0000012d\tw\t0\n?mca_strategy_quick_charge\tdrop_fv_cycle\t0000012d\tw\t0\n?strategy-fg\tdrop_fv_cycle\t0000012d\tw\t0\n' > $TMP/cy.tpl; cp $AVB $TMP/cy.avb
+DTBO_SET=I=$I,V=$V,T=$T,L=$L $H/dtbopatch $TMP/new.img $TMP/cy.tpl $TMP/new4.img -force > $TMP/cylog 2>&1; crc=$?
+cyn=$(grep -cE '^(patch|mismatch) ' $TMP/cylog); cyd=$(grep -c '^done ' $TMP/cylog)
+if [ $crc = 0 ] || [ $crc = 2 ]; then
+  [ $cyn -gt 0 ] && [ -s $TMP/new4.img ] && mv $TMP/new4.img $TMP/new.img
+  if [ $cyn -gt 0 ]; then echo "- 循环降压 drop_fv_cycle：$cyn 处改为 0"
+  elif [ $cyd -gt 0 ]; then echo "- 循环降压 drop_fv_cycle：已是 0"
+  else echo "- 本机 dtbo 没有 drop_fv_cycle，跳过"; fi
+else grep -E "SUMMARY|ERROR" $TMP/cylog; echo "! drop_fv_cycle 写入失败，分区未改动"; rm -rf $TMP; exit 1; fi
+fcr=miss
+for c in "34303000353030003830300031303030003635353335003135303000 65535|500|65535|1000|65535|1500" \
+         "333030003530300034303000353030003830300031303030003635353335003135303000 65535|500|65535|500|65535|1000|65535|1500" \
+         "33303000300038303000353030003635353335003130303000 65535|0|65535|500|65535|1000"; do
+  printf 'mca_strategy_quick_charge\tdrop_fcc_para\t%s\ts\t%s\n' ${c% *} ${c#* } > $TMP/fc.tpl; cp $AVB $TMP/fc.avb
+  DTBO_SET=I=$I,V=$V,T=$T,L=$L $H/dtbopatch $TMP/new.img $TMP/fc.tpl $TMP/new5.img > $TMP/fclog 2>&1; fc=$?
+  if [ $fc = 0 ] && [ -s $TMP/new5.img ]; then mv $TMP/new5.img $TMP/new.img; fcr=ok; echo "- 循环降流 drop_fcc_para：门槛改为 65535（${c#* }）"; break
+  elif [ $fc = 2 ]; then fcr=ok; echo "- 循环降流 drop_fcc_para：已是 65535"; break
+  elif [ $fc = 4 ]; then fcr=none; break
+  elif [ $fc = 3 ]; then continue
+  else grep -E "SUMMARY|ERROR" $TMP/fclog; echo "! drop_fcc_para 写入失败，分区未改动"; rm -rf $TMP; exit 1; fi
+done
+[ $fcr = none ] && echo "- 本机 dtbo 没有 drop_fcc_para，跳过"
+[ $fcr = miss ] && echo "- drop_fcc_para 不是已收录的原厂布局，保持本机原样"
 write $TMP/new.img || { rm -rf $TMP; exit 1; }
 echo "$I $V $T $Z $PW $FH" > $D/conf; echo mod > $D/state$S
 rm -rf $TMP
