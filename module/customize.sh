@@ -138,11 +138,10 @@ else
 fi
 menu 2 "dtbo 满速/断充温度" "设定温度以下满速，超过停充" "修改为 55°C" "不修改温度"
 [ $SEL = 1 ] && DT=55
-# 关机电压选项按原厂值往下给两档（小米15/15 Pro/K80 Pro 原厂 3050，K90/K90至尊版 原厂 2850）
-if [ $V0 -ge 3000 ]; then VA=2900; VB=3000; else VA=2700; VB=2800; fi
+# 关机电压只给 2800mV 一档（用户 2026-10-21 要求）
 V0T="原厂 ${V0}mV"; [ "$GEN" = 1 ] && V0T="原厂值以本机为准"
-menu 3 "dtbo 内核关机电压" "电池电压降到该值才关机（$V0T）" "修改为 ${VA}mV" "修改为 ${VB}mV" "不修改关机电压"
-case $SEL in 1) DV=$VA;; 2) DV=$VB;; esac
+menu 3 "dtbo 内核关机电压" "电池电压降到该值才关机（$V0T）" "修改为 2800mV" "不修改关机电压"
+[ $SEL = 1 ] && DV=2800
 if [ "$HZ" = 1 ]; then
   menu 4 "屏幕超频" "华星屏添加 132/144/155/165Hz 刷新率档位" "屏幕超频 165Hz" "不超频屏幕"
   [ $SEL = 1 ] && DZ=165
@@ -155,7 +154,7 @@ if [ $SEL = 1 ]; then MV=2800; [ "$DV" != - ] && MV=$DV; else MV=0; fi
 echo $MV > $D/shutdown_mv
 menu $((S4+1)) "公版 PPS 解锁" "内置 FreePPS（Seyud，GPL-3.0）：第三方 PPS 头放行高功率快充，小米原装头照常走私有协议" "关闭" "开启"
 PPS=0; [ $SEL = 2 ] && PPS=1; echo $PPS > $D/pps
-menu $((S4+2)) "充电监测软件" "配合${MODNAME}使用的充电监测 App（充电监测 v5.5，含公版 PPS 控制中心磁贴）" "安装充电检测软件" "不安装"
+menu $((S4+2)) "充电监测软件" "配合${MODNAME}使用的充电监测 App（充电监测 v5.9，含公版 PPS 控制中心磁贴）" "安装充电检测软件" "不安装"
 CM=$SEL
 DR=0; DO=$D/dtbo.out; true > $DO 2>/dev/null || { DO=/dev/mcb_dtbo.out; true > $DO; }
 if [ "$DI$DT$DV$DZ" != "----" ]; then
