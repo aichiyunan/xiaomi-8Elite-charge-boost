@@ -43,7 +43,7 @@ for kw in fast_charge apdo adapter_id strategy charger_type pd_auth; do
 done
 # 缓存节点路径，read.sh 每秒读取时不再遍历
 {
-  echo "BAT='$BAT'"; echo "USB='$USB'"
+  echo "CV=60"; echo "BAT='$BAT'"; echo "USB='$USB'"
   ps=""; for p in /sys/class/power_supply/*; do
     [ -f $p/online ] || continue
     case "$(cat $p/type 2>/dev/null)" in Battery|BMS|Unknown) ;; *) ps="$ps $p/online";; esac
@@ -55,5 +55,25 @@ done
   UT=""; [ -n "$USB" ] && { [ -f $USB/real_type ] && UT=$USB/real_type || UT=$USB/usb_type; }
   [ -f /sys/class/qcom-battery/usb_real_type ] && UT=/sys/class/qcom-battery/usb_real_type
   echo "UT='$UT'"
+  # 双电芯（小米 xm_power 主/副电量计）：按候选文件名找每节的电压、电流、QMAX
+  fgf(){ for n in $2; do [ -f "$1/$n" ] && cat "$1/$n" >/dev/null 2>&1 && { echo "$1/$n"; return; }; done; }
+  FM=/sys/class/xm_power/fg_master; FS=/sys/class/xm_power/fg_slave
+  VN="voltage_now vbat fg_vbat batt_vol vol voltage vcell cell_voltage"
+  IN="current_now ibat fg_ibat batt_curr curr current"
+  QN="qmax fg_qmax qmax0 batt_qmax"
+  QB=/sys/class/qcom-battery
+  if [ -f $QB/fg1_voltage ] && [ -f $QB/fg2_voltage ]; then
+    # 小米平板 8 Pro 等：qcom-battery 下 fg1_/fg2_ 两个电量计（电压 µV，电流 mA）
+    echo "C1V=$QB/fg1_voltage"; echo "C2V=$QB/fg2_voltage"
+    [ -f $QB/fg1_current ] && echo "C1I=$QB/fg1_current"; [ -f $QB/fg2_current ] && echo "C2I=$QB/fg2_current"
+    [ -f $QB/fg1_qmax ] && echo "C1Q=$QB/fg1_qmax"; [ -f $QB/fg2_qmax ] && echo "C2Q=$QB/fg2_qmax"
+  elif [ -d $FM ] && [ -d $FS ]; then
+    echo "C1V='$(fgf $FM "$VN")'"; echo "C2V='$(fgf $FS "$VN")'"
+    echo "C1I='$(fgf $FM "$IN")'"; echo "C2I='$(fgf $FS "$IN")'"
+    echo "C1Q='$(fgf $FM "$QN")'"; echo "C2Q='$(fgf $FS "$QN")'"
+    echo "FGL='$(ls $FM 2>/dev/null | tr '\n' ' ')'"
+  fi
+  [ -f /sys/class/qcom-battery/power_max ] && echo "PMX=/sys/class/qcom-battery/power_max"
+  [ -f /sys/class/qcom-battery/ibus_total ] && echo "IBT=/sys/class/qcom-battery/ibus_total"
 } > $D/ps.cache
 cat $out
