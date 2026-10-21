@@ -127,15 +127,18 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
 .dz .bt,.dz-in .bt{display:flex;gap:8px;margin-top:10px}.dz .bt button,.dz-in .bt button{flex:1;margin:0}
 .sel{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}.sel button{border:1px solid var(--line);background:transparent;color:var(--sub);border-radius:999px;padding:3px 10px;font-size:12px}
 .sel button.on{border-color:var(--c);color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
-.hero{display:grid;grid-template-columns:auto 1fr 1fr;gap:14px;align-items:center;background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;--hc:#16a34a}
+.hero{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:center;background:var(--card);border-radius:14px;padding:14px;margin-bottom:10px;--hc:#16a34a}
 .hero.chg{--hc:#2b5cff}.hero.low{--hc:#ef4444}
 .bico{width:40px;height:56px;color:var(--hc)}
-.hc .k{color:var(--sub);font-size:12px}.hc .k2{color:var(--sub);font-size:11px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hc{min-width:0}.hc .k{color:var(--sub);font-size:12px}.hc .k2{color:var(--sub);font-size:11px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hc .big{font-size:30px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}.hc .big small{font-size:14px;font-weight:500;color:var(--sub);margin-left:3px}
 .hc .big #cap{color:var(--hc)}
 .pbar{height:4px;border-radius:2px;background:var(--line);margin-top:6px;overflow:hidden}.pbar i{display:block;height:100%;width:0;background:var(--hc);transition:width .4s}
 .dot{font-size:12px;margin-top:6px;color:#f59e0b}.dot:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:5px;vertical-align:2px}
 .dot.c{color:#2b5cff}.dot.f{color:#16a34a}
+.cells{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cells.one{grid-template-columns:1fr}.cells [hidden]{display:none!important}.cells>div{background:var(--icb);border-radius:12px;padding:10px 12px;min-width:0}
+.cells h4{margin:0 0 6px;font-size:13px;color:#2b5cff}.cells .row{border:0;padding:3px 0}.cells .row b{font-variant-numeric:tabular-nums}.cells .row small{color:var(--sub);font-weight:500;margin-left:2px}
+.cellx{display:flex;justify-content:space-between;font-size:13px;margin-top:8px;color:var(--sub)}.cellx b{color:var(--fg)}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 8px}
 .g4>div{min-width:0}.g4 .dtx{display:contents}
 .g4 span{display:block;color:var(--sub);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -181,7 +184,7 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
     <div class="dot" id="st">--</div><div class="k2" id="chg">--</div></div>
 </div>
 <div class="card g4" id="bm">
-  <div><span>电压</span><b><em id="vo">--</em><small>V</small></b></div>
+  <div><span id="vol">电压</span><b><em id="vo">--</em><small>V</small></b></div>
   <div><span>电流</span><b><em id="cu">--</em><small>A</small></b></div>
   <div><span>电池温度</span><b id="teb"><em id="te">--</em><small>°C</small></b></div>
   <div><span>循环次数</span><b class="cyb"><span class="cv"><em id="cyc">--</em><small>次</small><i class="ct ct1" id="ct1" hidden>伪装</i></span><span id="cycx" hidden><small class="cs">/</small><span class="cv"><em id="cycr"></em><small>次</small><i class="ct ct2">实际</i></span></span></b></div>
@@ -190,6 +193,10 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
   <div><span>详细健康度</span><b class="ac"><em id="hlth">--</em><small>%</small></b></div>
   <div><span>今日充电</span><b><em id="today">--</em><small>次</small></b></div>
   <div class="dtx" id="dt"></div>
+</div>
+<div class="card" id="cellBox" hidden>
+  <div class="cells" id="cellsG"><div><h4>电芯 1</h4><div class="row"><span>电压</span><b><span id="c1v">--</span><small>mV</small></b></div><div class="row" id="c1qr"><span id="c1ql">QMAX</span><b><span id="c1q">--</span><small>mAh</small></b></div><div class="row" id="c1ir"><span>电流</span><b><span id="c1i">--</span><small>mA</small></b></div></div>
+  <div id="cell2"><h4>电芯 2</h4><div class="row"><span>电压</span><b><span id="c2v">--</span><small>mV</small></b></div><div class="row" id="c2qr"><span>QMAX</span><b><span id="c2q">--</span><small>mAh</small></b></div><div class="row" id="c2ir"><span>电流</span><b><span id="c2i">--</span><small>mA</small></b></div></div></div>
 </div>
 <div id="chgBox" hidden>
 <h2>充电中</h2>
@@ -410,6 +417,12 @@ const pad2=x=>String(x).padStart(2,'0');
 const fmtT=s=>{const d=new Date(s*1000);return `${d.getMonth()+1}/${d.getDate()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;};
 const fmtDur=s=>{s=Math.max(0,Math.round(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h?`${h} 小时 ${m} 分`:`${m} 分 ${s%60} 秒`;};
 // 电压 µV 时电流按 µA；充电统一为正
+// 电池名太长（高通参考配置名等）时显示简称：设计容量mah_标称功率w
+function bname(n,o){n=String(n||'').trim();if(n.length<=20)return n;
+  const d=num(o.design),cap=d?Math.round(d>100000?d/1000:d):null;let w=null;
+  {const pm=num(o.pmax);if(pm&&pm>0)w=Math.round(pm>1000?pm/1000:pm);}
+  if(!w){const m=n.match(/(\d{2,3})W(?![A-Z])/i);if(m)w=+m[1];}
+  if(!cap)return n;return cap+'mah'+(w?'_'+w+'w':'');}
 function conv(v,i,status){
   v=num(v);i=num(i);
   const uv=v!==null&&Math.abs(v)>100000;
@@ -495,7 +508,29 @@ async function tick(){
     const i=l.indexOf('=');if(i<0)return;const k=l.slice(0,i),v=l.slice(i+1).trim();
     if(k.startsWith('dt|'))dt.push([k.slice(3),v]);else if(k.startsWith('tz|'))tz.push([k.slice(3),v]);else o[k]=v;});
   const st=(o.status||'').toLowerCase();
-  const {V,I,P}=conv(o.volt,o.curr,o.status);
+  let {V,I,P}=conv(o.volt,o.curr,o.status);
+  // 双电芯：每节电压/电流/QMAX；串联时电池电压若只报单节就按两节相加，并联时电池电流若只算一节就按两节相加
+  {const mv=x=>{x=num(x);return x===null||x<=0?null:(x>100000?x/1000:x>100?x:x*1000);},ma=x=>{x=num(x);return x===null?null:(Math.abs(x)>30000?x/1000:x);},mah=x=>{x=num(x);return x===null||x<=0?null:(x>100000?x/1000:x);};
+   const v1=mv(o.c1v),v2=mv(o.c2v),dual=v1!==null&&v2!==null;window.__dv=null;let mode='';
+   $('cellBox').hidden=!dual&&V===null;$('cell2').hidden=!dual;$('cellsG').classList.toggle('one',!dual);
+   if(!dual&&V!==null){// 单电芯：只显示电压、电流（容量上方已有）
+    T('c1v',Math.round(V*1000));$('c1ir').hidden=I===null;if(I!==null)T('c1i',Math.round(Math.abs(I)*1000));$('c1qr').hidden=true;}
+   if(dual){const i1=ma(o.c1i),i2=ma(o.c2i),q1=mah(o.c1q),q2=mah(o.c2q),vb=V===null?null:V*1000,avg=(v1+v2)/2;
+    T('c1v',Math.round(v1));T('c2v',Math.round(v2));window.__dv=Math.round(Math.abs(v1-v2));T('c1ql','QMAX');
+    $('c1qr').hidden=q1===null;$('c2qr').hidden=q2===null;if(q1!==null)T('c1q',Math.round(q1));if(q2!==null)T('c2q',Math.round(q2));
+    $('c1ir').hidden=i1===null;$('c2ir').hidden=i2===null;if(i1!==null)T('c1i',Math.round(Math.abs(i1)));if(i2!==null)T('c2i',Math.round(Math.abs(i2)));
+    const bn=(dt.find(x=>x[0]==='电池型号')||[])[1]||'';let ser=(vb!==null&&vb>avg*1.6)||/(^|_)2S(_|$)/i.test(bn);
+    // 自检：按串联算出的充电功率明显超过 USB 输入功率，说明不是串联口径，改按并联
+    {const uv=num(o.usb_v),ui=num(o.usb_i),uP=uv&&ui?(uv>100000?uv/1e6:uv/1e3)*(Math.abs(ui)>30000?Math.abs(ui)/1e6:Math.abs(ui)/1e3):null;
+     if(ser&&!(vb>avg*1.6)&&uP&&I!==null&&Math.abs(I)*(v1+v2)/1000>uP*1.15)ser=false;
+     // 两节电流之和≈电池总电流，说明是并联（串联时每节电流都等于总电流）
+     {const sum=(i1!==null&&i2!==null)?(Math.abs(i1)+Math.abs(i2))/1000:null;if(ser&&!(vb>avg*1.6)&&sum&&I!==null&&Math.abs(I)>0.2&&Math.abs(sum-Math.abs(I))<Math.abs(I)*0.2)ser=false;}}
+    if(ser){mode='串联';if(vb===null||vb<avg*1.6)V=(v1+v2)/1000;}
+    else{mode='并联';if(vb===null||vb<avg*0.8)V=avg/1000;
+     const sum=(i1!==null&&i2!==null)?(Math.abs(i1)+Math.abs(i2))/1000:null;
+     if(sum!==null&&(I===null||Math.abs(I)<sum*0.7))I=(I!==null&&I<0?-1:1)*sum;}
+    P=(V!==null&&I!==null)?V*I:null;}
+   T('vol',dual?(mode==='串联'?'电压·两节':'电压·平均'):'电压');}
   const t=num(o.temp),C=t===null?null:t/10;
   const online=o.online==='1',chgMode=online||st==='charging';
   const capN=num(o.cap);
@@ -524,10 +559,10 @@ async function tick(){
   Hm('pt',pp.length?pp.map(([k,v])=>`<div class="row"><span>${k}</span><span>${v}</span></div>`).join(''):'<div class="empty">未读取到协议节点</div>');
   {const ds=dt.filter(x=>!x[0].startsWith('P:'));const e=eta(ds,o,I,st);
    if(!ds.some(x=>x[0]==='预计充满'))ds.push(['预计充满','']);
-   {const bmx=ds.find(x=>x[0]==='电池型号');T('bmodel',bmx?'电池 '+bmx[1]:(o.health?'健康 '+o.health:'--'));}
+   {const bmx=ds.find(x=>x[0]==='电池型号');T('bmodel',bmx?'电池 '+bname(bmx[1],o):(o.health?'健康 '+o.health:'--'));}
    const isC=k=>/电流上限|预计充满/.test(k);
    const cell=([k,v])=>{const t=k==='预计充满'?e:fmtDetail(k,v);const u=String(t).match(/^(-?[\d.]+)\s*(%|mAh|mV|A|W|V)$/);return `<div${t.length>9?' class="w2"':''}><span>${k}</span><b>${u?u[1]+'<small>'+u[2]+'</small>':t}</b></div>`;};
-   Hm('dt',ds.filter(x=>!isC(x[0])&&x[0]!=='电池型号').map(cell).join(''));
+   Hm('dt',ds.filter(x=>!isC(x[0])&&x[0]!=='电池型号').map(cell).join('')+(window.__dv!=null?`<div><span>压差</span><b>${window.__dv}<small>mV</small></b></div>`:''));
    Hm('dtc',ds.filter(x=>isC(x[0])).map(cell).join(''));}
   Hm('tz',tz.map(([k,v])=>{const x=num(v);if(x===null)return '';const c=Math.abs(x)>1000?x/1000:x;return `<div><span>${TN(k)}</span><b class="${tcls(c)}">${c.toFixed(1)}<small>°C</small></b></div>`;}).join('')||'<div class="empty">--</div>');
   if(st==='charging'){if(!wasChg){peak=0;sumP=0;cntP=0;}if(P!==null&&P>0){peak=Math.max(peak,P);sumP+=P;cntP++;}}
