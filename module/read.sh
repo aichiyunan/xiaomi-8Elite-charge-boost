@@ -4,6 +4,7 @@ MODDIR=${0%/*}
 D=/data/adb/mi_charge_boost
 [ -f $D/ps.cache ] || sh $MODDIR/detect.sh >/dev/null 2>&1
 . $D/ps.cache
+[ "$CV" = 60 ] || { sh $MODDIR/detect.sh >/dev/null 2>&1; . $D/ps.cache; }
 rd(){ [ -r "$2" ] && { IFS= read -r v < "$2"; echo "$1=$v"; }; }
 rd cap $BAT/capacity; rd status $BAT/status; if [ -f $D/soft_on ] && [ -f $D/real_temp ]; then rd temp $D/real_temp; else rd temp $BAT/temp; fi
 rd volt $BAT/voltage_now
@@ -12,8 +13,11 @@ rd cycle $BAT/cycle_count; rd cycr /sys/class/xm_power/fg_master/qmax_cyclecount
 rd full $BAT/charge_full; rd design $BAT/charge_full_design
 on=0; for f in $ONL; do [ -r $f ] && { IFS= read -r v < $f; [ "$v" = "1" ] && on=1; }; done
 echo "online=$on"
-if [ -n "$USB" ]; then rd usb_v $USB/voltage_now; rd usb_i $USB/input_current_now; fi
+if [ -n "$USB" ]; then rd usb_v $USB/voltage_now; if [ -r $USB/input_current_now ]; then rd usb_i $USB/input_current_now; elif [ -n "$IBT" ] && [ -r "$IBT" ]; then read -r v < "$IBT"; case "$v" in ''|*[!0-9-]*) ;; *) echo "usb_i=$((v*1000))";; esac; fi; fi
 [ -n "$UT" ] && rd usb_type $UT
+# 双电芯：每节电压/电流/QMAX（节点不存在时不输出）
+rd c1v "$C1V"; rd c2v "$C2V"; rd c1i "$C1I"; rd c2i "$C2I"; rd c1q "$C1Q"; rd c2q "$C2Q"; rd pmax "$PMX"
+[ -n "$FGL" ] && echo "fgl=$FGL"
 if [ -f $D/detail.list ]; then
   while IFS='|' read -r lab path; do [ -r "$path" ] && { IFS= read -r v < "$path"; case "$path" in *charge_counter) case "$v" in *[!0-9-]*|"") ;; *) v=$((v/1000));; esac;; esac; echo "dt|$lab=$v"; }; done < $D/detail.list
 fi
