@@ -2,6 +2,20 @@
 
 所有版本刷入包都在 [`releases/`](releases/) 目录。
 
+## v8.6.1（2026-10-21）
+
+两个刷入包改动相同，刷入区分沿用 v8.6.0：Mi8Elite 为五款机型专版（刷入校验机型），Micharge 为通用版（不校验机型，dtbo 逐项比对）。
+
+- 内核关机电压改为只给 2800mV 一档（另可选不修改），不再按原厂值给两档
+- 新增双电芯显示：识别小米 xm_power 主/副电量计和 qcom-battery fg1/fg2（如小米平板 8 Pro），WebUI 分别显示每节电芯的电压、电流、QMAX
+- 输入电流读不到 input_current_now 时改读 ibus_total；读取 power_max 用于电池简称
+- 电池名过长时显示简称（设计容量mah_标称功率w）
+- WebUI 首页卡片防止长文字撑破布局
+- 内置充电监测 App 更新到 v5.9
+
+- [`releases/Mi8Elite-charge-boost_v8.6.1.zip`](releases/Mi8Elite-charge-boost_v8.6.1.zip)　md5 `80c7e9f43d321a554a9881b5db82b2b8`
+- [`releases/Micharge-boost_v8.6.1.zip`](releases/Micharge-boost_v8.6.1.zip)　md5 `a70cca68478f30b3e14721d0548cc93d`
+
 ## v8.6.0（2026-10-20）
 
 本版起分两个刷入包，功能相同，区别只在机型适配：
