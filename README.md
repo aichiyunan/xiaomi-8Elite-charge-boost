@@ -4,7 +4,7 @@
 
 **小米 / 红米 骁龙 8 至尊版系列充电增强模块**
 
-![version](https://img.shields.io/badge/version-v8.6.0-orange)
+![version](https://img.shields.io/badge/version-v8.6.1-orange)
 ![device](https://img.shields.io/badge/device-Xiaomi%2015%20%7C%2015%20Pro%20%7C%20K80%20Pro%20%7C%20K90%20%7C%20K90%20Ultra-blue)
 ![root](https://img.shields.io/badge/root-KernelSU%20%7C%20Magisk-green)
 ![author](https://img.shields.io/badge/author-酷安@鱼楠-red)
@@ -17,12 +17,12 @@
 
 | 文件 | 说明 |
 | --- | --- |
-| [`releases/Mi8Elite-charge-boost_v8.6.0.zip`](releases/Mi8Elite-charge-boost_v8.6.0.zip) | 机型专版：仅五款已适配机型，刷入校验机型，其它机型拒绝 |
-| [`releases/Micharge-boost_v8.6.0.zip`](releases/Micharge-boost_v8.6.0.zip) | 通用版：不校验机型，其它带原厂 MCA 快充的小米/红米机型也能刷（dtbo 逐项比对） |
+| [`releases/Mi8Elite-charge-boost_v8.6.1.zip`](releases/Mi8Elite-charge-boost_v8.6.1.zip) | 机型专版：仅五款已适配机型，刷入校验机型，其它机型拒绝 |
+| [`releases/Micharge-boost_v8.6.1.zip`](releases/Micharge-boost_v8.6.1.zip) | 通用版：不校验机型，其它带原厂 MCA 快充的小米/红米机型也能刷（dtbo 逐项比对） |
 | [`module/`](module/) | 模块完整源码（通用版） |
 | [`CHANGELOG.md`](CHANGELOG.md) | 全部版本更新日志（v8.0.7 起，历史刷入包在 `releases/`） |
 
-md5：Mi8Elite `bc56a481cb696bd0746c8c4043f07a69`，Micharge `177c294f1913891a2b113d5560cad4c0`
+md5：Mi8Elite `80c7e9f43d321a554a9881b5db82b2b8`，Micharge `a70cca68478f30b3e14721d0548cc93d`
 
 ---
 
@@ -33,7 +33,7 @@ md5：Mi8Elite `bc56a481cb696bd0746c8c4043f07a69`，Micharge `177c294f1913891a2b
 | --- | --- | --- |
 | 快充电流 | 原厂值 / 模块上限 / 不修改 | 小米15 为 15.5A / 20.5A；K80 Pro 上限 22A |
 | 满速/断充温度 | 55°C / 不修改 | 设定温度以下满速，超过才停充（原厂 48°C） |
-| 内核关机电压 | 两档 / 不修改 | 原厂 3050mV 的机型 2900 / 3000mV；K90 系列（原厂 2850mV）2700 / 2800mV |
+| 内核关机电压 | 2800mV / 不修改 | 电池电压降到 2800mV 才关机 |
 | 屏幕超频 | 165Hz / 不超频 | 仅小米15：华星屏添加 132 / 144 / 155 / 165Hz 档位 |
 
 - 刷入前自动备份当前 dtbo 为原厂镜像，卸载模块即还原
@@ -58,6 +58,7 @@ md5：Mi8Elite `bc56a481cb696bd0746c8c4043f07a69`，Micharge `177c294f1913891a2b
 
 ### 📊 WebUI 与充电监测
 - 实时功率、电流、电压、温度曲线与协议详情
+- 双电芯机型分别显示每节电芯的电压、电流、QMAX
 - 充电记录、功率与温度极值统计（只在充电时记录）
 - 内置 **充电监测 App**（含公版 PPS 控制中心磁贴）
 
