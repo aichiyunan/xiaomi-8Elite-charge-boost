@@ -4,7 +4,7 @@
 
 **小米 / 红米 骁龙 8 至尊版系列充电增强模块**
 
-![version](https://img.shields.io/badge/version-v8.6.1-orange)
+![version](https://img.shields.io/badge/version-v8.6.2-orange)
 ![device](https://img.shields.io/badge/device-Xiaomi%2015%20%7C%2015%20Pro%20%7C%20K80%20Pro%20%7C%20K90%20%7C%20K90%20Ultra-blue)
 ![root](https://img.shields.io/badge/root-KernelSU%20%7C%20Magisk-green)
 ![author](https://img.shields.io/badge/author-酷安@鱼楠-red)
@@ -17,12 +17,12 @@
 
 | 文件 | 说明 |
 | --- | --- |
-| [`releases/Mi8Elite-charge-boost_v8.6.1.zip`](releases/Mi8Elite-charge-boost_v8.6.1.zip) | 机型专版：仅五款已适配机型，刷入校验机型，其它机型拒绝 |
-| [`releases/Micharge-boost_v8.6.1.zip`](releases/Micharge-boost_v8.6.1.zip) | 通用版：不校验机型，其它带原厂 MCA 快充的小米/红米机型也能刷（dtbo 逐项比对） |
+| [`releases/Mi8Elite-charge-boost_v8.6.2.zip`](releases/Mi8Elite-charge-boost_v8.6.2.zip) | 机型专版：仅五款已适配机型，刷入校验机型，其它机型拒绝 |
+| [`releases/Micharge-boost_v8.6.2.zip`](releases/Micharge-boost_v8.6.2.zip) | 通用版：不校验机型，其它带原厂 MCA 快充的小米/红米机型也能刷（dtbo 逐项比对） |
 | [`module/`](module/) | 模块完整源码（通用版） |
 | [`CHANGELOG.md`](CHANGELOG.md) | 全部版本更新日志（v8.0.7 起，历史刷入包在 `releases/`） |
 
-md5：Mi8Elite `80c7e9f43d321a554a9881b5db82b2b8`，Micharge `a70cca68478f30b3e14721d0548cc93d`
+md5：Mi8Elite `1e96a7db2a847c7559ef71150ddbd002`，Micharge `1758a13a991cda717c1d5e2bbcada7ec`
 
 ---
 
@@ -36,6 +36,7 @@ md5：Mi8Elite `80c7e9f43d321a554a9881b5db82b2b8`，Micharge `a70cca68478f30b3e1
 | 内核关机电压 | 2800mV / 不修改 | 电池电压降到 2800mV 才关机 |
 | 屏幕超频 | 165Hz / 不超频 | 仅小米15：华星屏添加 132 / 144 / 155 / 165Hz 档位 |
 
+- 关闭循环降压与降流：drop_fv_cycle 改 0，drop_fcc_para 循环门槛改 65535
 - 刷入前自动备份当前 dtbo 为原厂镜像，卸载模块即还原
 - 原厂镜像哈希校验，已收录 OS3 / OS4 共 10 个官方版本
 - 官改或非收录镜像可选择「以当前镜像修改刷入」
