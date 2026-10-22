@@ -2,6 +2,14 @@
 
 所有版本刷入包都在 [`releases/`](releases/) 目录。
 
+## v8.6.3（2026-10-22）
+
+- Mi8Elite 专版：去掉 dtbo 整包哈希校验，改为「机型校验 + 逐项比对」。仍只允许五款已适配机型刷入；当前 dtbo 是已收录原厂镜像时按机型模板写入，不是（官改包、新版本底包等）时自动备份当前分区并逐项比对原厂值，只写吻合的项，不再弹「原厂镜像校验未通过」
+- Micharge 通用版：功能与 v8.6.2 相同，仅同步版本号
+
+- [`releases/Mi8Elite-charge-boost_v8.6.3.zip`](releases/Mi8Elite-charge-boost_v8.6.3.zip)　md5 `8c772ffe3a60f41ea2a85fcc6b8305ef`
+- [`releases/Micharge-boost_v8.6.3.zip`](releases/Micharge-boost_v8.6.3.zip)　md5 `d6df1b747eab69ab6a477d49dfc17f5d`
+
 ## v8.6.2（2026-10-21）
 
 两个刷入包改动相同，刷入区分沿用 v8.6.0：Mi8Elite 为五款机型专版（刷入校验机型），Micharge 为通用版（不校验机型，dtbo 逐项比对）。
