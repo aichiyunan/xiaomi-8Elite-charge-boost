@@ -17,7 +17,7 @@
 
 | 文件 | 说明 |
 | --- | --- |
-| [`releases/Mi8Elite-charge-boost_v8.6.3.zip`](releases/Mi8Elite-charge-boost_v8.6.3.zip) | 机型专版：仅五款已适配机型，刷入校验机型，其它机型拒绝 |
+| [`releases/Mi8Elite-charge-boost_v8.6.3.zip`](releases/Mi8Elite-charge-boost_v8.6.3.zip) | 机型专版：仅五款已适配机型，刷入校验机型，其它机型拒绝；dtbo 逐项比对 |
 | [`releases/Micharge-boost_v8.6.3.zip`](releases/Micharge-boost_v8.6.3.zip) | 通用版：不校验机型，其它带原厂 MCA 快充的小米/红米机型也能刷（dtbo 逐项比对） |
 | [`module/`](module/) | 模块完整源码（通用版） |
 | [`CHANGELOG.md`](CHANGELOG.md) | 全部版本更新日志（v8.0.7 起，历史刷入包在 `releases/`） |
@@ -38,7 +38,7 @@ md5：Mi8Elite `8c772ffe3a60f41ea2a85fcc6b8305ef`，Micharge `d6df1b747eab69ab6a
 
 - 关闭循环降压与降流：drop_fv_cycle 改 0，drop_fcc_para 循环门槛改 65535
 - 刷入前自动备份当前 dtbo 为原厂镜像，卸载模块即还原
-- 原厂镜像哈希校验，已收录 OS3 / OS4 共 10 个官方版本
+- 已收录原厂镜像按机型模板写入；未收录镜像（官改包、新底包）自动备份并逐项比对原厂值，只写吻合的项
 - 官改或非收录镜像可选择「以当前镜像修改刷入」
 - 保留原厂 AVB 签名结构与 salt
 
