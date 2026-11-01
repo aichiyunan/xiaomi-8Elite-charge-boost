@@ -46,7 +46,7 @@ button.on{background:#2b5cff;border-color:#2b5cff;color:#fff}
 button.w{width:100%;margin-top:8px}
 button.red{color:var(--red)}
 .prg{display:grid;grid-template-columns:1fr 1fr;column-gap:22px;margin-top:4px}.prg .pri{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
-.tsw{position:relative;display:inline-block;width:44px;height:26px}.tsw input{opacity:0;width:0;height:0}.tsw i{position:absolute;inset:0;background:var(--line);border-radius:13px;transition:.2s}.tsw i:before{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}.tsw input:checked+i{background:#2b5cff}.tsw input:checked+i:before{transform:translateX(18px)}.tsw input:disabled+i{opacity:.4}
+.tsw{position:relative;display:inline-block;width:44px;height:26px}.tsw input{opacity:0;width:0;height:0}.tsw i{position:absolute;inset:0;background:var(--line);border-radius:13px;transition:.2s}.tsw i:before{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}.tsw input:checked+i{background:#2b5cff}.tsw input:checked+i:before{transform:translateX(18px)}.tsw input:disabled+i{opacity:.4}.dzoff{opacity:.4;pointer-events:none;filter:grayscale(1)}
 .badge{display:inline-block;padding:1px 8px;border-radius:9px;font-size:12px;background:var(--bd);color:var(--sub);margin-left:6px;vertical-align:2px}
 .badge.c{background:var(--okb);color:var(--okf)}
 .rec{border-bottom:1px solid var(--line);padding:8px 0}
@@ -241,15 +241,19 @@ input[type=range]{width:100%;accent-color:#2b5cff;margin:6px 0 2px}
 <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:16px">参数</b><span id="dzst" style="font-size:12px;color:var(--sub)">读取中…</span></div>
 <div class="it"><div class="hd"><span>快充电流上限</span><label><input type="number" id="dzin" min="9000" max="20500" step="1" value="15500" inputmode="numeric">mA</label></div>
 <input type="range" id="dzi" min="9000" max="20500" step="100" value="15500"><div class="rg"><span>9000</span><span id="dzimx">20500 mA</span></div></div>
-<div class="it"><div class="hd"><span>内核关机电压</span><label><input type="number" id="dzvn" min="2400" max="3400" step="1" value="3400" inputmode="numeric">mV</label></div>
-<input type="range" id="dzv" min="2400" max="3400" step="10" value="3400"><div class="rg"><span>2400</span><span>3400 mV</span></div></div>
+<div class="it"><div class="hd"><span>修改内核关机电压</span><label class="tsw"><input type="checkbox" id="dzvon"><i></i></label></div>
+<div id="dzvb" class="dzoff"><div class="hd"><span style="font-size:13px;color:var(--sub)">关机电压</span><label><input type="number" id="dzvn" min="2400" max="3400" step="1" value="3050" inputmode="numeric">mV</label></div>
+<input type="range" id="dzv" min="2400" max="3400" step="10" value="3050"><div class="rg"><span>2400</span><span id="dzv0">原厂 3050 mV</span><span>3400 mV</span></div></div>
+<div style="font-size:11px;color:var(--sub)">关闭时保持本机原厂关机电压，滑块置灰防误触</div></div>
 <div class="it"><div class="hd"><span>满速/断充温度</span><label><input type="number" id="dztn" min="45" max="58" step="1" value="58" inputmode="numeric">°C</label></div>
-<input type="range" id="dzt" min="45" max="58" step="1" value="58"><div class="rg"><span>45</span><span>58 °C</span></div></div>
+<input type="range" id="dzt" min="45" max="58" step="1" value="48"><div class="rg"><span>45</span><span>原厂 48 °C</span><span>58 °C</span></div></div>
+<div class="it" id="dzfr"><div class="hd"><span>修改满充截止电压</span><label class="tsw"><input type="checkbox" id="dzfon"><i></i></label></div>
+<div id="dzfb" class="dzoff"><div class="hd"><span style="font-size:13px;color:var(--sub)">满充截止电压</span><label><input type="number" id="dzfn" min="4490" max="4650" step="1" value="4580" inputmode="numeric">mV</label></div>
+<input type="range" id="dzf" min="4490" max="4650" step="10" value="4580"><div class="rg"><span>4490</span><span id="dzf0">原厂 4580 mV</span><span>4650 mV</span></div>
+</div><div style="font-size:11px;color:var(--sub)">关闭时不改满充截止电压（保持原厂），滑块置灰防误触。打开后按设定值调整 FFC 截止电压，默认本机原厂值；调高可多充一点电量，但电池老化更快</div></div>
 <div class="it" id="dzzr"><div class="hd"><span>屏幕超频</span><span id="dzzb" style="display:flex;gap:6px"><button data-z="165" style="padding:4px 12px;font-size:12px;border-radius:999px">165Hz</button><button data-z="-" style="padding:4px 12px;font-size:12px;border-radius:999px">不超频</button></span></div>
 <div style="font-size:11px;color:var(--sub)">华星屏添加 132/144/155/165Hz 档位</div></div>
-<div class="it" id="dzfr"><div class="hd"><span>修改 quick_chg_fv_hys</span><label class="tsw"><input type="checkbox" id="dzfh"><i></i></label></div>
-<div style="font-size:11px;color:var(--sub)">打开写入 80；关闭写回原厂 1（默认）。本机 dtbo 没有该属性时跳过</div></div>
-<div style="font-size:11px;color:var(--sub);padding:8px 0 0">设定温度以下满速，超过即停充。写入 dtbo 并重算 AVB，重启后生效；原版自动备份。</div>
+<div style="font-size:11px;color:var(--sub);padding:8px 0 0">各项默认本机原厂值，等于原厂值的项保持原厂不改。设定温度以下满速，超过即停充。写入 dtbo 并重算 AVB，重启后生效；原版自动备份。</div>
 <div class="bt"><button class="w" id="dzok">写入（重启生效）</button><button class="w red" id="dzrst">还原原版</button></div>
 <pre id="dzlog" style="font-size:11px;white-space:pre-wrap;margin:8px 0 0;color:var(--sub)" hidden></pre>
 </div>
@@ -477,11 +481,14 @@ function chart(cv,series,from,to,opt){
 const mm=a=>{a=a.filter(x=>x!==null);return a.length?[Math.min(...a),Math.max(...a)]:null;};
 
 /* ---------- 机型参数（v8.4.9 多机型：model.sh 输出 JSON） ---------- */
-let MDL={ok:1,code:'dada',name:'小米15',modname:'小米15充电加速模块',imin:9000,imax:20500,istock:15500,vq:4580,v0:3050,pw0:90,pwo:[100,120],hz:1};
+let MDL={ok:1,code:'dada',name:'小米15',modname:'小米15充电加速模块',imin:9000,imax:20500,istock:15500,vq:4580,v0:3050,pw0:90,pwo:[100,120],hz:1,fv0:4580};
 async function mdlLoad(){try{const r=await exec('sh '+MOD+'/model.sh');const j=JSON.parse(r.stdout.trim().split('\n').pop());if(j.ok==1)MDL=j;}catch(e){}
   document.title=MDL.modname||'充电加速';
   ['dzi','dzin'].forEach(k=>{$(k).max=MDL.imax;$(k).min=MDL.imin;});$('dzimx').textContent=MDL.imax+' mA';
-  if(!$('dzi').dataset.set){$('dzi').value=MDL.istock;$('dzin').value=MDL.istock;}
+  const F0=+MDL.fv0||+MDL.vq||0;MDL.fv0=F0;
+  $('dzv0').textContent='原厂 '+MDL.v0+' mV';$('dzf0').textContent=F0?'原厂 '+F0+' mV':'原厂未识别';
+  $('dzfr').classList.toggle('dzoff',!F0);
+  if(!$('dzi').dataset.set){dzSet('dzi',MDL.istock);dzSet('dzv',MDL.v0);dzSet('dzt',DZT0);if(F0)dzSet('dzf',F0);dzVon(false);dzFon(false);}
   $('dzzr').style.display=MDL.hz==1?'':'none';if(MDL.hz!=1)dzZ('-');
   [100,120].forEach(v=>{const el=$('pr'+v);if(el)el.closest('.pri').style.display=MDL.pwo.includes(v)?'':'none';});
   if(!MDL.pwo.length)$('pr100').closest('.prg').style.display='none';
@@ -944,22 +951,30 @@ setInterval(()=>{if(page===2)ccStat();},3000);
 const SF=MOD+'/soft/soft.sh';
 
 const DT=MOD+'/dtbo/apply.sh';
-const DZ=[['dzi','mA'],['dzv','mV'],['dzt','°C']];
+const DZ=[['dzi','mA'],['dzv','mV'],['dzt','°C'],['dzf','mV']];const DZT0=48;
+function dzVon(on){$('dzvon').checked=on;$('dzvb').classList.toggle('dzoff',!on);$('dzv').disabled=$('dzvn').disabled=!on;}
+function dzFon(on){on=on&&!!MDL.fv0;$('dzfon').checked=on;$('dzfb').classList.toggle('dzoff',!on);$('dzf').disabled=$('dzfn').disabled=!on;}
+$('dzfon').onchange=()=>{dzFon($('dzfon').checked);if(!$('dzfon').checked&&MDL.fv0)dzSet('dzf',MDL.fv0);};
+$('dzvon').onchange=()=>{dzVon($('dzvon').checked);if(!$('dzvon').checked)dzSet('dzv',MDL.v0);};
 function dzSet(id,v){const r=$(id),mn=+r.min,mx=+r.max;v=Math.round(+v);if(isNaN(v))v=+r.value;v=Math.min(mx,Math.max(mn,v));r.value=v;$(id+'n').value=v;return v;}
 DZ.forEach(([id])=>{$(id).oninput=e=>{$(id+'n').value=e.target.value;};$(id+'n').onchange=e=>dzSet(id,e.target.value);});
 let DZZ='-';function dzZ(z){DZZ=z==='165'?'165':'-';document.querySelectorAll('#dzzb button').forEach(b=>{const on=b.dataset.z===DZZ;b.style.background=on?'#2b5cff':'';b.style.color=on?'#fff':'';});}
 document.querySelectorAll('#dzzb button').forEach(b=>b.onclick=()=>dzZ(b.dataset.z));dzZ('-');
-const dzFH=()=>$('dzfh').checked?'80':'-';
+// 等于原厂值的项传 -（保持原厂不改）
+const dzArg=()=>{const i=dzSet('dzi',$('dzin').value),t=dzSet('dzt',$('dztn').value),v=$('dzvon').checked?dzSet('dzv',$('dzvn').value):'-',f=(MDL.fv0&&$('dzfon').checked)?dzSet('dzf',$('dzfn').value):'-';
+  return {i:i==MDL.istock?'-':i,v:v,t:t==DZT0?'-':t,f:f==MDL.fv0?'-':f};};
 async function dtStat(){const r=await exec('sh '+DT+' status');const a=r.stdout.trim().split(' ').map(x=>x==='-'?'原厂':x);
-  const raw=r.stdout.trim().split(' ');if(raw[0]==='mod'){dzZ(raw[4]||'-');$('dzfh').checked=raw[6]==='80';}
-  T('dzst',a[0]==='mod'?'✅ 已应用 '+a[1]+'mA / '+a[2]+'mV / '+(a[3]||58)+'°C'+(raw[4]==='165'?' / 165Hz':'')+(raw[5]&&raw[5]!=='-'?' / 协议 '+raw[5]+'W':'')+(raw[6]==='80'?' / fv_hys 80':''):a[0]==='stock'?'原版':a[0]==='changed'?'⚠️ dtbo 已还原，请重新写入':'未修改');
-  if(a[0]==='mod'||a[0]==='changed'){$('dzi').dataset.set=1;dzSet('dzi',a[1]);dzSet('dzv',a[2]);dzSet('dzt',a[3]||58);}}
+  const raw=r.stdout.trim().split(' ');if(raw[0]==='mod')dzZ(raw[4]||'-');
+  T('dzst',a[0]==='mod'?'✅ 已应用 '+a[1]+'mA / '+a[2]+'mV / '+(a[3]||58)+'°C'+(raw[4]==='165'?' / 165Hz':'')+(raw[5]&&raw[5]!=='-'?' / 协议 '+raw[5]+'W':'')+(raw[6]&&raw[6]!=='-'?' / 满充 '+raw[6]+'mV':''):a[0]==='stock'?'原版':a[0]==='changed'?'⚠️ dtbo 已还原，请重新写入':'未修改');
+  if(a[0]==='mod'||a[0]==='changed'){$('dzi').dataset.set=1;const st=(x,d)=>(x&&x!=='-'&&x!=='原厂')?x:d;
+    dzSet('dzi',st(raw[1],MDL.istock));const vm=st(raw[2],'');dzVon(!!vm);dzSet('dzv',vm||MDL.v0);dzSet('dzt',st(raw[3],DZT0));
+    const fm=a[0]==='mod'?st(raw[6],''):'';const fok=+fm>=4490&&+fm<=4650;dzFon(fok);if(MDL.fv0)dzSet('dzf',fok?fm:MDL.fv0);}}
 async function dtRun(arg,btn){btn.disabled=true;$('dzlog').hidden=false;$('dzlog').textContent='正在处理，约 5 秒…';
   let r=await exec('sh '+DT+' '+arg+' 2>&1');let o=(r.stdout||'')+(r.stderr||'');$('dzlog').textContent=o;
   if(o.includes('原厂镜像校验未通过')&&confirm('原厂镜像校验未通过：当前 dtbo 不是已收录的原厂镜像（官改包可能有小改动）。\n\n是否备份当前 dtbo，并以当前镜像为底修改刷入？\n（不逐项比对原厂值，可随时写回备份）')){
     $('dzlog').textContent='以当前镜像为底写入中…';r=await exec('DTBO_CUR=1 sh '+DT+' '+arg+' 2>&1');$('dzlog').textContent=(r.stdout||'')+(r.stderr||'');}
   btn.disabled=false;dtStat();}
-$('dzok').onclick=()=>{const i=dzSet('dzi',$('dzin').value),v=dzSet('dzv',$('dzvn').value),t=dzSet('dzt',$('dztn').value);if(confirm('写入 dtbo：快充 '+i+' mA、关机电压 '+v+' mV、断充 '+t+'°C'+(MDL.hz==1?'、屏幕'+(DZZ==='165'?'超频 165Hz':'不超频'):'')+'、quick_chg_fv_hys '+(dzFH()==='80'?'80':'1（原厂）')+'？\n写入后需重启生效'))dtRun(i+' '+v+' '+t+' '+DZZ+' '+dzFH(),$('dzok'));};
+$('dzok').onclick=()=>{const d=dzArg(),y=(x,u)=>x==='-'?'原厂':x+' '+u;if(confirm('写入 dtbo：快充 '+y(d.i,'mA')+'、断充 '+y(d.t,'°C')+'、满充截止电压 '+y(d.f,'mV')+'、关机电压 '+y(d.v,'mV')+(MDL.hz==1?'、屏幕'+(DZZ==='165'?'超频 165Hz':'不超频'):'')+'？\n写入后需重启生效'))dtRun(d.i+' '+d.v+' '+d.t+' '+DZZ+' '+d.f,$('dzok'));};
 const PR=MOD+'/proto/proto.sh';let prBusy=false;
 async function prLog(){const r=await exec('sh '+PR+' log 2>&1');const t=((r.stdout||'')+(r.stderr||'')).trim();$('prlog').textContent=t||'暂无记录';}
 async function prStat(){if(prBusy)return;const r=await exec('sh '+PR+' status');try{const j=JSON.parse(r.stdout.trim().split('\n').pop());

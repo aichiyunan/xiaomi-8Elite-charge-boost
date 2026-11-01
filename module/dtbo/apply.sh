@@ -1,6 +1,8 @@
 #!/system/bin/sh
-# 用法: apply.sh <电流mA> <关机电压mV> <断充温度°C> [165|-] [80|-] | restore | status
-# 第 5 个参数：quick_chg_fv_hys，80=写入 80，-=写回 1（默认，原厂值）；本机 dtbo 没有该属性则跳过
+# 用法: apply.sh <电流mA> <关机电压mV> <断充温度°C> [165|-] [满充截止电压mV|-] | restore | status | fvq
+# 第 5 个参数（v8.6.4）：满充截止电压（FFC 截止电压）4490-4650mV，-=保持本机原厂；由 dtbofv 按本机 dtbo 实际值生成规则
+#   （FFC 列/分段表末级电压按差值平移、不超过设定值，FFC 过压阈值同步上调），各机型原厂值不同，WebUI 默认显示原厂值
+# quick_chg_fv_hys：v8.6.4 起去掉开关，已收录模板一律保持原厂 1（旧版改成 80 的重新写入时自动写回 1）
 # 第 4 项 165 = 屏幕超频 165Hz（华星 o3_42 屏添加 132/144/155/165Hz timing，仅小米15 dada）
 # 小米私有协议功率：不走参数，读 /data/adb/mi_charge_boost/proto（机型可选档位见 models.sh PWO，其它=原厂），由 WebUI 开关写入
 # v8.4.9 起多机型：机型参数见 ../models.sh；模板按原厂镜像头部哈希从 stock.list 选（<代号>_<布局>.tpl，dada 仍用 dada.tpl）
@@ -109,7 +111,7 @@ desc(){ # 把 dtbo 状态写进模块描述，模块列表里直接可见
   st=$(sh $H/apply.sh status 2>/dev/null); set -- $st
   bt=$(( $(date +%s) - $(cut -d. -f1 /proc/uptime) )); wt=$(stat -c %Y $D/written$S 2>/dev/null || echo 0)
   case "$1" in
-    mod) v="$(g $2 mA) / $(g $4 °C) / $(g $3 mV)"; [ "$5" = 165 ] && v="$v / 屏幕 165Hz"; [ "${6:--}" != - ] && v="$v / 协议 ${6}W"; [ "${7:--}" = 80 ] && v="$v / fv_hys 80"
+    mod) v="$(g $2 mA) / $(g $4 °C) / $(g $3 mV)"; [ "$5" = 165 ] && v="$v / 屏幕 165Hz"; [ "${6:--}" != - ] && v="$v / 协议 ${6}W"; [ "${7:--}" != - ] && v="$v / 满充 ${7}mV"
          if [ "$wt" -gt "$bt" ]; then t="⏳ DTBO 已写入 $v，重启生效"; else t="✅ DTBO 已生效 $v"; fi;;
     stock) if [ "$wt" -gt "$bt" ]; then t="⏳ DTBO 已还原原版，重启生效"; else t="DTBO 原版（未修改）"; fi;;
     changed) t="⚠️ DTBO 已被还原，之前的修改已失效";;
@@ -125,11 +127,16 @@ desc(){ # 把 dtbo 状态写进模块描述，模块列表里直接可见
 }
 case "$1" in
 desc) desc; exit 0;;
+fvq) # 本机原厂满充截止电压：优先读原厂备份，没有备份读当前分区
+  chmod 755 $H/dtbofv 2>/dev/null; if [ -f $D/stock.img ]; then $H/dtbofv probe $D/stock.img 2>/dev/null; else
+  t=/dev/mcb_fvq.$$; touch $t 2>/dev/null || t=$D/fvq.tmp; dd if=$BLK of=$t bs=1048576 2>/dev/null; $H/dtbofv probe $t 2>/dev/null; rm -f $t; fi; exit 0;;
 status)
-  [ -f $D/conf ] && read I V T Z P FH < $D/conf
+  [ -f $D/conf ] && read I V T Z P FV < $D/conf
+  # 旧版 conf 第 6 项是 fv_hys（80/-），不是满充截止电压
+  case "$FV" in 4[4-6][0-9][0-9]) ;; *) FV=-;; esac
   if [ -f $D/written$S ]; then read W N < $D/written$S
     if [ "$(sha $BLK $N)" = "$W" ]; then
-      if [ -f $D/conf ] && [ "$(cat $D/state$S 2>/dev/null)" = "mod" ]; then echo "mod $I $V ${T:-58} ${Z:--} ${P:--} ${FH:--}"; else echo "stock"; fi; exit 0; fi
+      if [ -f $D/conf ] && [ "$(cat $D/state$S 2>/dev/null)" = "mod" ]; then echo "mod $I $V ${T:-58} ${Z:--} ${P:--} ${FV:--}"; else echo "stock"; fi; exit 0; fi
     rm -f $D/stock.img $D/stock_src $D/written$S $D/state$S; echo "changed $I $V ${T:-58}"; exit 0; fi
   echo "none"; exit 0;;
 restore)
@@ -143,14 +150,14 @@ EOF
 CODE=$SI_D
 # v8.5.9 起不做机型校验：已适配机型用表内参数，其它机型按通用参数（GEN=1），dtbo 一律逐项比对
 model_load "$CODE"
-I=${1:--}; V=${2:--}; T=${3:--}; Z=${4:--}; FH=${5:--}
+I=${1:--}; V=${2:--}; T=${3:--}; Z=${4:--}; FV=${5:--}; FH=-
 case "$Z" in 165|-) ;; *) echo "! 屏幕超频参数只能是 165 或 -"; exit 1;; esac
-case "$FH" in 80|-) ;; *) echo "! quick_chg_fv_hys 参数只能是 80 或 -"; exit 1;; esac
+case "$FV" in -) ;; *[!0-9]*|"") echo "! 满充截止电压参数错误"; exit 1;; *) [ $FV -ge 4490 ] && [ $FV -le 4650 ] || { echo "! 满充截止电压范围 4490-4650 mV"; exit 1; };; esac
 [ "$Z" = 165 ] && [ "$HZ" != 1 ] && { echo "! 屏幕超频 165Hz 只支持小米15（华星 o3_42 屏），$MN 不支持"; exit 1; }
 # 私有协议档位只接受本机可选值（原厂已是 120W 的 K80 Pro 没有可选档）
 [ "$PW" != - ] && case " $PWO " in *" $PW "*) ;; *) echo "- 私有协议 ${PW}W 不适用于 $MN（原厂 ${PW0}W），忽略"; PW=-; rm -f $PF;; esac
 for x in "$I" "$V" "$T"; do case "$x" in -) ;; *[!0-9]*|"") echo "! 参数错误"; exit 1;; esac; done
-[ "$I$V$T$Z$PW$FH" = "------" ] && { echo "- 都不修改，跳过写入"; exit 0; }
+[ "$I$V$T$Z$PW$FV" = "------" ] && { echo "- 都不修改，跳过写入"; exit 0; }
 echo "- 机型: $SI_N ($SI_D)　系统: $SI_O${SI_B:+（底包 $SI_B）}"
 [ "$GEN" = 1 ] && echo "- 非已适配机型：通用模式，逐项比对已收录机型的原厂值，只写吻合的项，FFC 截止电压保持本机原厂"
 [ "$I" = - ] || { [ $I -ge 9000 ] && [ $I -le $MX ] || { echo "! 电流范围 9000-$MX mA"; exit 1; }; }
@@ -215,7 +222,7 @@ if [ "$TPL" = auto ]; then
   [ "$I$V$T" = "---" ] || autobuild
   [ "$Z" = 165 ] && { cat $H/hz165.tpl >> $TMP/r.tpl; echo "- 屏幕超频：添加 132/144/155/165Hz timing"; }
   FORCE=$AFORCE
-  [ -s $TMP/r.tpl ] || [ "$Z$PW$FH" != "---" ] || { echo "! 逐项比对没有可写入的项（本机 dtbo 与已收录机型的原厂值都不吻合），分区未改动"; rm -rf $TMP; exit 1; }
+  [ -s $TMP/r.tpl ] || [ "$Z$PW$FV" != "---" ] || { echo "! 逐项比对没有可写入的项（本机 dtbo 与已收录机型的原厂值都不吻合），分区未改动"; rm -rf $TMP; exit 1; }
 else
 [ "$I$V$T" = "---" ] || prep $I $T >> $TMP/r.tpl
 [ "$Z" = 165 ] && { cat $H/hz165.tpl >> $TMP/r.tpl; echo "- 屏幕超频：添加 132/144/155/165Hz timing"; }
@@ -236,6 +243,20 @@ else
 fi
 [ $rc = 2 ] && [ "$TPL" = auto ] && { cp $D/stock.img $TMP/new.img; rc=0; echo "- 所选数值与当前 dtbo 一致"; }
 [ $rc = 0 ] || { echo "! 生成失败，分区未改动"; rm -rf $TMP; exit 1; }
+if [ "$FV" != - ]; then
+  # 满充截止电压（v8.6.4）：dtbofv 读本机镜像实际值生成规则，旧值即当前值，按普通模式写入（不 -force）
+  chmod 755 $H/dtbofv
+  $H/dtbofv rules $TMP/new.img $FV > $TMP/fv.tpl 2> $TMP/fvs; vrc=$?
+  vq0=$(sed -n 's/^FV vq=\([0-9]*\).*/\1/p' $TMP/fvs)
+  if [ $vrc = 4 ]; then echo "- 本机 dtbo 没有 FFC 截止电压节点，满充截止电压保持原样"; FV=-
+  elif [ $vrc != 0 ]; then grep ERROR $TMP/fvs; echo "! 满充截止电压规则生成失败，分区未改动"; rm -rf $TMP; exit 1
+  elif [ -s $TMP/fv.tpl ]; then
+    cp $AVB $TMP/fv.avb
+    DTBO_SET=I=$I,V=$V,T=$T,L=$L $H/dtbopatch $TMP/new.img $TMP/fv.tpl $TMP/new6.img > $TMP/fvlog 2>&1; vrc=$?
+    if [ $vrc = 0 ] && [ -s $TMP/new6.img ]; then mv $TMP/new6.img $TMP/new.img; echo "- 满充截止电压：原厂 ${vq0}mV → ${FV}mV（$(grep -c . $TMP/fv.tpl) 项）"
+    else grep -E "SUMMARY|ERROR|mismatch |missing " $TMP/fvlog; echo "! 满充截止电压写入失败，分区未改动"; rm -rf $TMP; exit 1; fi
+  else echo "- 满充截止电压：${FV}mV 与原厂相同，保持原厂"; FV=-; fi
+fi
 if [ "$PW" != - ]; then
   # 小米私有协议功率：单独一遍，属性存在即覆盖（参考 K80 Pro：PD 协议 max_power 120W、快充 max_power 120000）
   printf 'mca_protocol_pd_class\tmax_power\t0000005a\tw\t%s\nmca_strategy_quick_charge\tmax_power\t00015f90\tw\t%s\n' $PW ${PW}000 > $TMP/p.tpl
@@ -247,15 +268,15 @@ if [ "$PW" != - ]; then
   if [ $prc = 0 ] && ! grep -q "^missing " $TMP/plog; then mv $TMP/new2.img $TMP/new.img; echo "- 小米私有协议：${PW}W"
   else echo "! 协议功率节点写入失败，分区未改动"; rm -rf $TMP; exit 1; fi
 fi
-# quick_chg_fv_hys：单独一遍，属性存在即覆盖；开关打开写 80，关闭写回 1（各机型原厂均为 1，非原厂底包上也能改回）
-FV=1; [ "$FH" = 80 ] && FV=80
-# 逐项比对模式下未开启 fv_hys 就保持本机当前值（未适配机型的原厂值未必是 1）
+# quick_chg_fv_hys：单独一遍，属性存在即覆盖；v8.6.4 起固定写回原厂 1（各机型原厂均为 1，旧版改成 80 的这里改回）
+HV=1
+# 逐项比对模式下保持本机当前值（未适配机型的原厂值未必是 1）
 if [ "$TPL" = auto ] && [ "$FH" != 80 ]; then FH=-; else
-printf 'mca_strategy_quick_charge\tquick_chg_fv_hys\t00000001\tw\t%s\n' $FV > $TMP/f.tpl; cp $AVB $TMP/f.avb
+printf 'mca_strategy_quick_charge\tquick_chg_fv_hys\t00000001\tw\t%s\n' $HV > $TMP/f.tpl; cp $AVB $TMP/f.avb
 DTBO_SET=I=$I,V=$V,T=$T,L=$L $H/dtbopatch $TMP/new.img $TMP/f.tpl $TMP/new3.img -force > $TMP/flog 2>&1; frc=$?
-if [ $frc = 4 ] || grep -q "^missing " $TMP/flog; then [ "$FH" = 80 ] && echo "- 本机 dtbo 没有 quick_chg_fv_hys，跳过"; FH=-
-elif [ $frc = 0 ] && [ -s $TMP/new3.img ]; then mv $TMP/new3.img $TMP/new.img; echo "- quick_chg_fv_hys：$FV"
-elif [ $frc = 2 ]; then echo "- quick_chg_fv_hys：$FV（已是该值）"
+if [ $frc = 4 ] || grep -q "^missing " $TMP/flog; then FH=-
+elif [ $frc = 0 ] && [ -s $TMP/new3.img ]; then mv $TMP/new3.img $TMP/new.img
+elif [ $frc = 2 ]; then :
 else grep -E "SUMMARY|ERROR" $TMP/flog; echo "! quick_chg_fv_hys 写入失败，分区未改动"; rm -rf $TMP; exit 1; fi
 fi
 # 循环降压（v8.6.2）：drop_fv_cycle 三处写 0（属性存在即覆盖；OS3 原厂 301，OS4 原厂即为 0）；
@@ -284,11 +305,11 @@ done
 [ $fcr = none ] && echo "- 本机 dtbo 没有 drop_fcc_para，跳过"
 [ $fcr = miss ] && echo "- drop_fcc_para 不是已收录的原厂布局，保持本机原样"
 write $TMP/new.img || { rm -rf $TMP; exit 1; }
-echo "$I $V $T $Z $PW $FH" > $D/conf; echo mod > $D/state$S
+echo "$I $V $T $Z $PW $FV" > $D/conf; echo mod > $D/state$S
 rm -rf $TMP
 f(){ [ "$1" = - ] && echo 不修改 || echo "$1$2"; }
 desc
 zz=不超频; [ "$Z" = 165 ] && zz=165Hz
 pp=原厂${PW0}W; [ "${PW0:-0}" = 0 ] && pp=原厂; [ "$PW" = - ] || pp=${PW}W
-fh=1; [ "$FH" = 80 ] && fh=80; [ "$TPL" = auto ] && [ "$FH" != 80 ] && fh=保持原样
-echo "- 已写入：充电电流 $(f $I mA)，关机电压 $(f $V mV)，断充温度 $(f $T °C)，屏幕 $zz，私有协议 $pp，fv_hys $fh，重启生效"
+fv=原厂; [ "$FV" = - ] || fv=${FV}mV
+echo "- 已写入：充电电流 $(f $I mA)，关机电压 $(f $V mV)，断充温度 $(f $T °C)，满充截止电压 $fv，屏幕 $zz，私有协议 $pp，重启生效"

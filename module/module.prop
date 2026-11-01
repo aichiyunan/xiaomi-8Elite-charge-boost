@@ -1,6 +1,6 @@
 id=mi_charge_boost
 name=小米/红米充电加速模块
-version=v8.6.3
-versionCode=863
+version=v8.6.4
+versionCode=864
 author=酷安@鱼楠
-description=致谢：酷安@低线阻狂魔、酷安@花橋桥（PPS 节点）、内置 FreePPS（Seyud / 酷安@瓦力喀，GPL-3.0）
+description=⏳ DTBO 已写入 原厂 / 原厂 / 原厂 / 满充 4620mV，重启生效 ｜ 低电量延迟关机 关 ｜ 公版PPS 关 ｜ 致谢：酷安@低线阻狂魔、酷安@花橋桥（PPS 节点）、内置 FreePPS（Seyud / 酷安@瓦力喀，GPL-3.0）

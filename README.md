@@ -4,7 +4,7 @@
 
 **小米 / 红米 骁龙 8 至尊版系列充电增强模块**
 
-![version](https://img.shields.io/badge/version-v8.6.3-orange)
+![version](https://img.shields.io/badge/version-v8.6.4-orange)
 ![device](https://img.shields.io/badge/device-Xiaomi%2015%20%7C%2015%20Pro%20%7C%20K80%20Pro%20%7C%20K90%20%7C%20K90%20Ultra-blue)
 ![root](https://img.shields.io/badge/root-KernelSU%20%7C%20Magisk-green)
 ![author](https://img.shields.io/badge/author-酷安@鱼楠-red)
@@ -17,8 +17,8 @@
 
 | 文件 | 说明 |
 | --- | --- |
-| [`releases/Mi8Elite-charge-boost_v8.6.3.zip`](releases/Mi8Elite-charge-boost_v8.6.3.zip) | 机型专版：仅五款已适配机型，刷入校验机型，其它机型拒绝；dtbo 逐项比对 |
-| [`releases/Micharge-boost_v8.6.3.zip`](releases/Micharge-boost_v8.6.3.zip) | 通用版：不校验机型，其它带原厂 MCA 快充的小米/红米机型也能刷（dtbo 逐项比对） |
+| [`releases/Mi8Elite-charge-boost_v8.6.4.zip`](releases/Mi8Elite-charge-boost_v8.6.4.zip) | 机型专版：仅五款已适配机型，刷入校验机型，其它机型拒绝；dtbo 逐项比对 |
+| [`releases/Micharge-boost_v8.6.4.zip`](releases/Micharge-boost_v8.6.4.zip) | 通用版：不校验机型，其它带原厂 MCA 快充的小米/红米机型也能刷（dtbo 逐项比对） |
 | [`module/`](module/) | 模块完整源码（通用版） |
 | [`CHANGELOG.md`](CHANGELOG.md) | 全部版本更新日志（v8.0.7 起，历史刷入包在 `releases/`） |
 

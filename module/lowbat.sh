@@ -5,7 +5,7 @@ MODDIR=${0%/*}
 . $MODDIR/common.sh
 # 关机电压下限 = DTBO 内核关机电压（已写入的修改值，未修改则用本机原厂值）；低于它内核会先关机，设了也没用
 vfloor(){ set -- $(sh $MODDIR/dtbo/apply.sh status 2>/dev/null)
-  if [ "$1" = mod ] && [ -n "$3" ]; then VF=$3; else VF=$(sh $MODDIR/model.sh 2>/dev/null | sed -n 's/.*"v0":\([0-9]*\).*/\1/p'); fi
+  if [ "$1" = mod ] && [ -n "$3" ] && [ "$3" != - ]; then VF=$3; else VF=$(sh $MODDIR/model.sh 2>/dev/null | sed -n 's/.*"v0":\([0-9]*\).*/\1/p'); fi
   case "$VF" in ''|*[!0-9]*) VF=2700;; esac; [ "$VF" -gt 3400 ] && VF=3400; }
 [ "$1" = floor ] && { vfloor; echo $VF; exit 0; }
 if [ -f $D/lowbat.pid ] && kill -0 $(cat $D/lowbat.pid) 2>/dev/null; then exit 0; fi
